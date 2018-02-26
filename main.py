@@ -34,6 +34,7 @@ enemy_dict = {
                 "About":"HOGEHOGE",
                 "ATK":20,
                 "HIT":90,
+                "TYPE":1,
                 "TURN": -1
             }
         }
@@ -46,15 +47,22 @@ user_skill_dict = {
         "TYPE": 2,
         "MAT": 3,
         "HIT": 90,
-        "Cost": 2
+        "Cost": 5
     },
     "Freeze":{
         "About": "氷を纏ったボールを放つ、2回ぐらい跳ねそう",
         "TYPE": 1,
         "MAT": 3,
         "HIT":90,
-        "Cost": 2
+        "Cost": 5
     },
+    "DirtyHack":{
+        "About": "けがれた魔法",
+        "TYPE": 4,
+        "MAT": 2,
+        "HIT":95,
+        "Cost": 10
+    }
 }
 
 #Type= 0/無属性 1/水 2/炎 3/風 4/土 5/闇 6/光
@@ -92,10 +100,10 @@ class Player(Entity):
         self.LV = LV
         self.TYPE = 2
         self.MAX_HP = self.HP = 50 + int(LV*0.2)
-        self.ATK = 10 + int(LV*0.1)
+        self.MAX_MP = self.MP = 30 + int(LV*0.2)
+        self.ATK = 10 + int(LV*0.15)
         self.MAT = 10 + int(LV*0.1)
-        self.MP = 10 + int(LV*0.1)
-        self.DEF = 1 + int(LV*0.2)
+        self.DEF = 1 + int(LV*0.1)
         self.Skills = Skills
 
 #敵の情報
@@ -142,6 +150,12 @@ class Battle(object):
             or Skill["TYPE"] == 6 and to.TYPE == 5):
                 damage = int(damage * (1+(random.randint(4,5)/10)))
                 print("あいしょうはばつぐんだ！")
+            if (Skill["TYPE"] == 1 and to.TYPE == 4
+            or Skill["TYPE"] == 4 and to.TYPE == 3
+            or Skill["TYPE"] == 3 and to.TYPE == 2
+            or Skill["TYPE"] == 2 and to.TYPE == 1):
+                damage = int(damage * (random.randint(4,6)/10))
+                print("こうかはいまひとつのようだ...")
             if damage <= 0: damage = 0 
             to.HP -= damage
             print("%sは%sのダメージを受けた"%(to.name,damage))
@@ -192,8 +206,12 @@ class Commands(Battle):
             line = input("> ")
             for s in self.user.Skills:
                 if line == s:
-                    self.magic_attack(self.user,self.teki,self.user.Skills[s])
-                    self.attack(self.teki,self.user)
+                    if self.user.MP >= self.user.Skills[s]["Cost"]:
+                        self.user.MP -= self.user.Skills[s]["Cost"]
+                        self.magic_attack(self.user,self.teki,self.user.Skills[s])
+                        self.attack(self.teki,self.user)
+                    else:
+                        print("MPが足りません")
                     bye = True
                     self.help()
                     break
@@ -202,7 +220,7 @@ class Commands(Battle):
                     self.help()
                     break
     def show_status(self,user,enemy):
-        print("/// You: %s/%s  Enemy: %s/%s ///"%(user.HP,user.MAX_HP,enemy.HP,enemy.MAX_HP))
+        print("/// You: %s/%s %s/%s Enemy: %s/%s ///"%(user.HP,user.MAX_HP,user.MP,user.MAX_MP,enemy.HP,enemy.MAX_HP))
 
         
 cmd_dict = {
@@ -216,6 +234,9 @@ cmd_dict = {
 class Game(Commands):
     user = Player("Domao",5,user_skill_dict)
     teki = Enemy("NicoNico",11)
+    
+    def __init__(self):
+        print("Game Initialized")
     
     def game_check(self):
         if self.user.HP <= 0:
@@ -234,15 +255,19 @@ class Game(Commands):
         while True:
             self.game_check()
             self.show_status(self.user,self.teki)
-            line = input("> ")
+            line = input("Command? > ")
             for c in cmd_dict.keys():
                 if line == c:
                     cmd_dict[c](gm)
                     break
             for s in self.user.Skills:
                 if line == s:
-                    self.magic_attack(self.user,self.teki,self.user.Skills[s])
-                    self.attack(self.teki,self.user)
+                    if self.user.MP >= self.user.Skills[s]["Cost"]:
+                        self.user.MP -= self.user.Skills[s]["Cost"]
+                        self.magic_attack(self.user,self.teki,self.user.Skills[s])
+                        self.attack(self.teki,self.user)
+                    else:
+                        print("MPが足りません")
                     break
 gm = Game()
 gm.start()
