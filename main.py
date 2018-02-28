@@ -91,6 +91,7 @@ class Entity(object):
     MP = MAX_MP = 10
     ATK = MAT = 10
     MDF = DEF = 10
+    LUK = 10
     Skills = None
 
 #プレイヤー型 (後にユーザーデータから取るように変更する)
@@ -98,7 +99,7 @@ class Player(Entity):
     def __init__(self, name, LV, Skills, pos=1):
         self.name = name
         self.LV = LV
-        self.TYPE = 2
+        self.TYPE = 0
         self.MAX_HP = self.HP = 50 + int(LV*0.2)
         self.MAX_MP = self.MP = 30 + int(LV*0.2)
         self.ATK = 10 + int(LV*0.15)
@@ -118,52 +119,70 @@ class Enemy(Entity):
             self.TYPE = enemy_dict[name]["TYPE"]
             self.ATK = enemy_dict[name]["ATK"]
             self.DEF = enemy_dict[name]["DEF"]
+            self.LUK = 5
             self.Skills = enemy_dict[name]["Skills"]
         #レベルに合わせてATKを弄る
         self.HP = self.MAX_HP = int(self.HP*(1+((level/5))))
         self.ATK = self.ATK*(1+(random.randint(0,3)/10))*(1+((level/5)))
 
 class Battle(object):
-    #敵の攻撃/自分の攻撃共通でこの処理を通そう
-    #敵と同じ処理通して自機も自動戦闘とかできるかな？
-    def attack(self,_from,to):
-        print("%sの攻撃"%(_from.name))
-        damage = int((_from.ATK*(1+(random.randint(0,3)/10))) - (to.DEF * (random.randint(3,6)/10)))
+    #ダメージ計算機
+    def gen_damage(self,_from,to,type=1,Skill=None):
+        if Skill == None: Skill = {"TYPE":_from.TYPE}
+        if type == 1:
+            damage = int(((_from.MAT+Skill["MAT"])*(1+(random.randint(0,3)/10))) - (to.MDF * (random.randint(3,6)/10)))
+        else:
+            damage = int((_from.ATK*(1+(random.randint(0,3)/10))) - (to.DEF * (random.randint(3,6)/10)))
+        #クリティカル(通常30%)が出たら 1.2~1.3倍のダメージ
+        if random.randint(1,100) < _from.LUK + 20:
+            print("クリティカル！")
+            damage = int(damage*1+(random.randint(2,3)/10))
+        #Type= 0/無属性 1/水 2/炎 3/風 4/土 5/闇 6/光
+        #相性が良ければ 1.3~1.5倍のダメージ
+        if (Skill["TYPE"] == 1 and to.TYPE == 2
+        or Skill["TYPE"] == 2 and to.TYPE == 3
+        or Skill["TYPE"] == 3 and to.TYPE == 4
+        or Skill["TYPE"] == 4 and to.TYPE == 1
+        or Skill["TYPE"] == 5 and to.TYPE == 6
+        or Skill["TYPE"] == 6 and to.TYPE == 5):
+            damage = int(damage * (1+(random.randint(4,5)/10)))
+            print("あいしょうはばつぐんだ！")
+        #相性が悪ければ 0.4~0.6倍のダメージ
+        if (Skill["TYPE"] == 1 and to.TYPE == 4
+        or Skill["TYPE"] == 4 and to.TYPE == 3
+        or Skill["TYPE"] == 3 and to.TYPE == 2
+        or Skill["TYPE"] == 2 and to.TYPE == 1):
+            damage = int(damage * (random.randint(4,6)/10))
+            print("こうかはいまひとつのようだ...")
+        return damage
+        
+    #ダメージを受けさせる
+    def get_damage(self,to,damage):
         if damage <= 0: damage = 0
         to.HP -= damage
         print("%sは%sのダメージを受けた"%(to.name,damage))
         if to.HP <= 0:
             print("%sは倒れた"%(to.name))
             self.game_check()
+
+    #敵の攻撃/自分の攻撃共通で下記攻撃処理を通す
+    #物理攻撃
+    def attack(self,_from,to):
+        print("%sの攻撃"%(_from.name))
+        #ダメージ計算して、ダメージを受ける
+        damage = self.gen_damage(_from,to,0)
+        self.get_damage(to,damage)
+    #魔法攻撃
     def magic_attack(self,_from,to,Skill):
         print("%sの攻撃"%(_from.name))
-        damage = int(((_from.MAT+Skill["MAT"])*(1+(random.randint(0,3)/10))) - (to.MDF * (random.randint(3,6)/10)))
         #命中率的な設定
         if random.randint(1,100) < Skill["HIT"]:
-            #Type= 0/無属性 1/水 2/炎 3/風 4/土 5/闇 6/光
-            #相性が良ければ 1.3~1.5倍のダメージ
-            if (Skill["TYPE"] == 1 and to.TYPE == 2
-            or Skill["TYPE"] == 2 and to.TYPE == 3
-            or Skill["TYPE"] == 3 and to.TYPE == 4
-            or Skill["TYPE"] == 4 and to.TYPE == 1
-            or Skill["TYPE"] == 5 and to.TYPE == 6
-            or Skill["TYPE"] == 6 and to.TYPE == 5):
-                damage = int(damage * (1+(random.randint(4,5)/10)))
-                print("あいしょうはばつぐんだ！")
-            if (Skill["TYPE"] == 1 and to.TYPE == 4
-            or Skill["TYPE"] == 4 and to.TYPE == 3
-            or Skill["TYPE"] == 3 and to.TYPE == 2
-            or Skill["TYPE"] == 2 and to.TYPE == 1):
-                damage = int(damage * (random.randint(4,6)/10))
-                print("こうかはいまひとつのようだ...")
-            if damage <= 0: damage = 0 
-            to.HP -= damage
-            print("%sは%sのダメージを受けた"%(to.name,damage))
-            if to.HP <= 0:
-                print("%sは倒れた"%(to.name))
-                self.game_check()
+            #ダメージ計算して♡
+            damage = self.gen_damage(_from,to,1,Skill)
+            self.get_damage(to,damage)
         else:
             print("%sの攻撃は外れた"%(_from.name))
+    #防御
     def defense(self,user,enemy):
         self.user.DEF += 10
         self.user.MDF += 10
