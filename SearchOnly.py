@@ -7,7 +7,7 @@
     [X]で固定値 [X,Y]で X～Y表記
 
 　マップ(ルーム)一覧:
-    "識別ID": {イベントデータ or None},
+    "識別ID": {イベントデータ},
     "識別ID": {イベントデータ or None}
     
  モンスター(編成一覧):
@@ -31,9 +31,9 @@
 '''
 quest_data = {
     "デバッグクエスト":{
-        "Waves":　[6],   
+        "Waves":　[6],
         "Start": [1],
-        "Maps":{
+        "Map":{
             1: {"Type":1,"Message":"奥へと続いている..."},
             2: {"Type":2,"Message":"石が転がってきた","Param":["5%","10%"]},
             3: {"Type":3,"Message":"回復の泉だ","Param":["100%"]},
@@ -55,6 +55,8 @@ quest_data = {
         }
     }
 }
+
+hiragana = [chr(i) for i in range(12353, 12436)]
 
 #プレイヤー/敵/NPC関係なく必ずこれらのデータを持っている
 class Entity(object):
@@ -82,23 +84,85 @@ class Player(Entity):
 
 #探索システムメイン
 class Dungeon():
+    '''
+      1: テキスト表示 Param なし
+      2: ダメージ Param["最低値","最大値"]
+      3: 回復 Param["最低値","最大値"]
+      4: 宝箱 Param[[ドロップアイテムリスト],本物である確率]
+      5: 戦闘 Param[編成ID,編成Wave2,編成Wave3...]
+      6: ジャンプ Param[ジャンプ先ID,ランダムジャンプ先ID,ランダムジャンプ先ID...]
+      7: 分かれ道 Param[[選択肢名,ジャンプ先ID],[選択肢名,ジャンプ先ID]...]
+      8: 行き止まり Param[ドロップアイテムデータ,ドロップアイテムデータ...]
+      9: ゴール Param[ドロップアイテムデータ,ドロップアイテムデータ...]
+    '''
+
     #CurrentPosition
     cp = 0
-    def show_text():
+    def __init__(self,dungeon_data):
+        self.dungeon = dungeon_data
+        print("Search Initialized"):
+        
+    def GO(self):
+        data = self.dungeon[self.cp]
+        if "Message" in data: Text(data)
+        if data["Type"] == 2:　Damage(data)
+        elif data["Type"] == 3: Heal(data)
+        elif data["Type"] == 4: Treasure(data)
+        elif data["Type"] == 5: Battle(data)
+        elif data["Type"] == 6: Jump(data)
+        elif data["Type"] == 7: Switch(data)
+        elif data["Type"] == 8: Stop(data)
+        elif data["Type"] == 9: Goal(data)
+        self.cp += 1
+    
+    def Text(self,data):
+        print(data["Message"])
+        
+    def Damage(self,data):
         pass
         
+    def Heal(self,data):
+        pass
+        
+    def Treasure(self,data):
+        pass
+        
+    def Battle(self,data):
+        pass
+    
+    def Jump(self,data):
+        pass
+    
+    def Swtich(self,data):
+        pass
+    
+    def Stop(self,data):
+        pass
+        
+    def Goal(self,data):
+        pass
     
         
 #探索を進めるのに使うコマンド一覧
 class Commands():
-    def rest():
+    def rest(self):
         pass
+    def go(self):
+        self.Dungeon.GO()
 
 #探索システム と コマンド一覧と プレイヤー型を継承する 
 class Search(Dungeon,Commands,Player):
     user = Player("Domao",5,{})
+    #stub
+    inventory = {}
     cmd_dict = {
-        "rest": rest
+        "go": go,
+        "rest": rest,
+        "item": item,
+        "leave": leave,
+        "ok": leave_ok,
+        "no": back,
+        "back": back
     }
 
     def __init__(self):
