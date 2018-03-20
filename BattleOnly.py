@@ -22,20 +22,61 @@ enemy_dict = {
     "NicoNico":{
         "About": "爆破しなきゃ(使命)",
         "TYPE": 3,
+        "CHARGE":0,
+        "CHARGE_BAR": 7,
         "HP": 20,
         "MP" : 10,
         "ATK": 2,
         "MAT": 2,
         "DEF": 5,
         "MDF": 10,
-        "SPD": 10,
+        "SPD": 100,
+        "LUK": 10,
+        "Percents":{
+            75:"Defaults",
+            100:"Specials"
+        },
         "Skills": {
-            "TEST":{
-                "About":"HOGEHOGE",
-                "ATK":20,
-                "HIT":90,
-                "TYPE":1,
-                "TURN": -1
+            "Defaults":{
+                "Auto":True,
+                1:{"Name":"月額540円"},
+                2:{"Name":"GINZA"},
+                3:{"Name":"原宿"}
+            },
+            "Specials":{
+                "Auto":True,
+                10:{
+                    "Name":"いいじゃないココが盛り上がっていれば",
+                    "About":"それは遅刻の言い訳にならない。",
+                    "MAT":5,
+                    "HIT":100,
+                    "TYPE":0
+                },
+                20:{
+                    "Name":"デクレッシェンド",
+                    "About":"独自の最先端機能を搭載する予定。",
+                    "MAT":5,
+                    "HIT":100,
+                    "TYPE":0
+                },
+                100:{
+                    "Name":"みんな空気読め",
+                    "About":"皆さんのコンテンツやコメントを消したいわけではないのです。",
+                    "MAT":10,
+                    "HIT": 65,
+                    "TYPE":5
+                }
+            },
+            "Charge":{
+                7:{
+                    "1":{
+                        "Name":"ニコニコ本社が池袋に誕生",
+                        "About": "世界一爆発され、喜ばれた建物",
+                        "ATK":18,
+                        "HIT": 85,
+                        "TYPE":2
+                    }
+                }
             }
         }
     }
@@ -43,6 +84,7 @@ enemy_dict = {
 
 user_skill_dict = {
     "Fire":{
+        "Name":"ファイアボール!",
         "About": "炎を纏ったボールを放つ、2回ぐらい跳ねそう",
         "TYPE": 2,
         "MAT": 3,
@@ -50,6 +92,7 @@ user_skill_dict = {
         "Cost": 5
     },
     "Freeze":{
+        "Name":"カチカチ!",
         "About": "氷を纏ったボールを放つ、2回ぐらい跳ねそう",
         "TYPE": 1,
         "MAT": 3,
@@ -57,6 +100,7 @@ user_skill_dict = {
         "Cost": 5
     },
     "DirtyHack":{
+        "Name":"クラッキング!",
         "About": "けがれた魔法",
         "TYPE": 4,
         "MAT": 2,
@@ -92,11 +136,12 @@ class Entity(object):
     ATK = MAT = 10
     MDF = DEF = 10
     LUK = 10
+    SPD = 10
     Skills = None
 
 #プレイヤー型 (後にユーザーデータから取るように変更する)
 class Player(Entity):
-    def __init__(self, name, LV, Skills, pos=1):
+    def __init__(self, name, LV, Skills):
         self.name = name
         self.LV = LV
         self.TYPE = 0
@@ -105,6 +150,7 @@ class Player(Entity):
         self.ATK = 10 + int(LV*0.15)
         self.MAT = 10 + int(LV*0.1)
         self.DEF = 1 + int(LV*0.1)
+        self.SPD = 20 + int(LV*0.01)
         self.Skills = Skills
 
 #敵の情報
@@ -118,14 +164,94 @@ class Enemy(Entity):
             self.MP = self.MAX_MP = enemy_dict[name]["MP"]
             self.TYPE = enemy_dict[name]["TYPE"]
             self.ATK = enemy_dict[name]["ATK"]
+            self.MAT = enemy_dict[name]["MAT"]
             self.DEF = enemy_dict[name]["DEF"]
-            self.LUK = 5
+            self.MDF = enemy_dict[name]["MDF"]
+            self.SPD = enemy_dict[name]["SPD"]
+            self.LUK = enemy_dict[name]["LUK"]
+            self.Percents = enemy_dict[name]["Percents"]
             self.Skills = enemy_dict[name]["Skills"]
         #レベルに合わせてATKを弄る
         self.HP = self.MAX_HP = int(self.HP*(1+((level/5))))
         self.ATK = self.ATK*(1+(random.randint(0,3)/10))*(1+((level/5)))
 
 class Battle(object):
+    #プレイヤーに見えるターン数
+    turn = 1
+    #内部ターンID(1ターンが終わったら0に戻る)
+    i_turn = 0
+    #敵かプレイヤーの処理が終わるとこれを返す(予定)
+    log_text = ""
+
+    #スピード計算機(スキル等で変わる可能性があるのでここに置く)
+    def gen_entities_list(self,entities):
+        spls = []
+        for entity in entities:
+            spls.append((entity.SPD,entity))
+        speed_list = sorted(spls,reverse=True)
+        self.entities = [i[1] for i in speed_list]
+
+    #ターン処理
+    def process_turn(self):
+        entity = self.entities[self.i_turn]
+        if type(entity) == Enemy:
+            self.process_enemy(entity)
+        elif type(entity) == Player:
+            self.process_player(entity)
+        self.i_turn += 1
+        if self.i_turn >= len(self.entities):
+            self.i_turn = 0
+            self.turn += 1
+    
+    #辞書から一覧を作りランダムに選んで返す
+    def pick_by_dict_per(self,dic):
+        if "Auto" in dic:
+            ls = list(dic.keys())
+            ls.remove("Auto")
+            return random.choice(ls)
+        num = random.randint(1,100)
+        for key in dic:
+            if num <= key:
+                return key
+    
+    #敵の処理 (プレイヤーに対して攻撃する)
+    def process_enemy(self,enemy):
+        #スキルを選ぶ
+        pick = self.pick_by_dict_per(enemy.Percents)
+        skill_dic = enemy.Percents[pick]
+        pick = self.pick_by_dict_per(enemy.Skills[skill_dic])
+        skill = enemy.Skills[skill_dic][pick]
+        skill["S_Type"] = skill_dic
+        if skill["S_Type"] == "Defaults":
+            print(skill["Name"])
+            self.attack(enemy,self.user)
+        elif skill["S_Type"] == "Specials":
+            skill["MAT"] += enemy.MAT
+            self.magic_attack(enemy,self.user,skill)
+        
+    #プレイヤーの処理
+    def process_player(self,player):
+        self.show_status(self.user,self.teki)
+        print("%sはどうする?"%(self.user.name))
+        bye = False
+        while True:
+            if bye: break
+            line = input("< ")
+            for c in cmd_dict.keys():
+                if line == c:
+                    cmd_dict[c](gm)
+                    bye = True
+                    break
+            for s in self.user.Skills:
+                if line == s:
+                    if self.user.MP >= self.user.Skills[s]["Cost"]:
+                        self.user.MP -= self.user.Skills[s]["Cost"]
+                        self.magic_attack(self.user,self.teki,self.user.Skills[s])
+                    else:
+                        print("MPが足りません")
+                    bye = True
+                    break
+
     #ダメージ計算機
     def gen_damage(self,_from,to,type=1,Skill=None):
         if Skill == None: Skill = {"TYPE":_from.TYPE}
@@ -175,6 +301,7 @@ class Battle(object):
     #魔法攻撃
     def magic_attack(self,_from,to,Skill):
         print("%sの攻撃"%(_from.name))
+        print(Skill["Name"])
         #命中率的な設定
         if random.randint(1,100) < Skill["HIT"]:
             #ダメージ計算して♡
@@ -190,18 +317,14 @@ class Battle(object):
         self.user.DEF -= 10
         self.user.MDF -= 10
 
-#ターンとか敵リスト管理とか？
-class Field(object):
-    def __init__(self,battle_data):
-        pass
-
 #ユーザーの入力に応じてコマンドを実行する
 class Commands(Battle):
+    def test(self):
+        self.process_turn()
     def help(self):
         print (cmd_dict.keys())
     def kougeki(self):
         self.attack(self.user,self.teki)
-        self.attack(self.teki,self.user)
     def bougyo(self):
         self.defense(self.user,self.teki)
     def info(self):
@@ -228,18 +351,16 @@ class Commands(Battle):
                     if self.user.MP >= self.user.Skills[s]["Cost"]:
                         self.user.MP -= self.user.Skills[s]["Cost"]
                         self.magic_attack(self.user,self.teki,self.user.Skills[s])
-                        self.attack(self.teki,self.user)
+                        bye = True
                     else:
                         print("MPが足りません")
-                    bye = True
-                    self.help()
                     break
                 if line == "back":
                     bye = True
                     self.help()
                     break
     def show_status(self,user,enemy):
-        print("/// You: %s/%s %s/%s Enemy: %s/%s ///"%(user.HP,user.MAX_HP,user.MP,user.MAX_MP,enemy.HP,enemy.MAX_HP))
+        print("\n/// You: %s/%s %s/%s Enemy: %s/%s ///"%(user.HP,user.MAX_HP,user.MP,user.MAX_MP,enemy.HP,enemy.MAX_HP))
 
         
 cmd_dict = {
@@ -247,7 +368,8 @@ cmd_dict = {
     "attack": Commands.kougeki,
     "spell": Commands.show_skills,
     "defense": Commands.bougyo,
-    "info": Commands.info
+    "info": Commands.info,
+    "test": Commands.test
 }
         
 class Game(Commands):
@@ -256,6 +378,8 @@ class Game(Commands):
     
     def __init__(self):
         print("Game Initialized")
+        self.gen_entities_list([self.user,self.teki])
+        print(self.entities)
     
     def game_check(self):
         if self.user.HP <= 0:
@@ -269,24 +393,8 @@ class Game(Commands):
     
     def start(self):
         print("%sが現れた!"%(self.teki.name))
-        print("%sはどうする?"%(self.user.name))
-        self.help()
         while True:
             self.game_check()
-            self.show_status(self.user,self.teki)
-            line = input("Command? > ")
-            for c in cmd_dict.keys():
-                if line == c:
-                    cmd_dict[c](gm)
-                    break
-            for s in self.user.Skills:
-                if line == s:
-                    if self.user.MP >= self.user.Skills[s]["Cost"]:
-                        self.user.MP -= self.user.Skills[s]["Cost"]
-                        self.magic_attack(self.user,self.teki,self.user.Skills[s])
-                        self.attack(self.teki,self.user)
-                    else:
-                        print("MPが足りません")
-                    break
+            self.process_turn()
 gm = Game()
 gm.start()
