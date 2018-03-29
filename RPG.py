@@ -578,10 +578,10 @@ class RPG():
                     elif stat["Screen"] == "Battle": self.process_battle(msg,data,stat)
                     else: raise ValueError
             else:
-                self.cl.sendMessage("社畜娘RPGへようこそ🌎")
+                self.cl.sendMessage("Welcome to RPG")
                 self.process_rpg(msg)
         else:
-            self.cl.sendMessage("社畜娘RPGへようこそ🌎")
+            self.cl.sendMessage("Welcome to RPG")
             self.process_gate(msg)
     def process_gate(msg):
         self.cl.sendMessage('アカウントがないみたいです!\n新規登録しても大丈夫でしょうか？\n\n"はい" または "あ"\nで登録\n"いいえ" または "い" でキャンセルします')
