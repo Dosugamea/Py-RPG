@@ -1,0 +1,37 @@
+{
+    "USER":{
+        "ID": 1,
+        "Type":0,
+        "Level": 1,
+        "Exp": 0,
+        "Stone": 0,
+        "Money": 0,
+        "Stats":{
+            "ScreenID":3,
+            "Tutorial":{
+                "StepID":0
+            },
+            "Home":{
+                "MenuID":0
+            },
+            "Battle":{
+                "Selecting":false,
+                "MenuID":0
+            },
+            "Search":{
+                "StepID":0
+            },
+            "Shop":{
+                "ID":0
+            }
+        },
+        "Skills":{},
+        "Equipments":{},
+        "Inventory":{},
+        "Items": {},
+        "Quests":{},
+        "Missions":{},
+        "Settings":{},
+        "LetterBox":{}
+    }
+}

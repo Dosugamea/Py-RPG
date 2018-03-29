@@ -1,0 +1,18 @@
+{
+    1:{
+        "Name":"テストアイテム",
+        "About":"テスト用_無効アイテム",
+        "ReUse": false
+    },
+    2:{
+        "Name":"テストアイテム2",
+        "About":"テスト用_効果アイテム",
+        "ReUse": false,
+        "Effect":{
+            "Entire": false,
+            "TYPE": 11,
+            "Power": 1,
+            "HIT":95
+        }
+    }
+}

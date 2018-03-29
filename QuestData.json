@@ -1,0 +1,65 @@
+{
+    "デバッグクエスト":{
+        "Stamina":0,
+        "Waves": [6],
+        "Start": [1],
+        "Map":{
+            1: {"Type":1,"Message":"奥へと続いている..."},
+            2: {"Type":2,"Message":"石が転がってきた","Param":["5%","10%"]},
+            3: {"Type":3,"Message":"回復の泉だ","Param":["100%"]},
+            4: {"Type":5,"Message":"何かが動いている!","Param":[1]},
+            5: {"Type":6,"Message":"まだまだ奥へと続いている...","Param":[7]},
+            6: {"Type":1,"Message":"このメッセージが見れるのはおかしいよ"},
+            7: {"Type":7,"Message":"分かれ道だ","Param":[["左へ進む",8],["そのまま進む",10],["右へ進む",12]]},
+            8: {"Type":1,"Message":"何もないようだ"},
+            9: {"Type":6,"Param":[14]},
+            10: {"Type":4,"Message":"宝箱を見つけた","Param":[[1,1,100],10]},
+            11: {"Type":6,"Param":[14]},
+            12: {"Type":5,"Message":"何かがくねくねしている!","Param":[2]},
+            13: {"Type":4,"Message":"宝箱を見つけた","Param":[[1,5,100],100]},
+            14: {"Type":9,"Message":"行き止まりのようだ。\n帰ることにした。"}
+        },
+        "Monsters":{
+            1:{
+                1:[
+                    {
+                        "Name": "NicoNico",
+                        "LV": [1],
+                        "Equipments":{},
+                        "Drops": [
+                            {"ITEM_ID":1,"COUNT":10,"PERCENT":100},
+                            {"ITEM_ID":2,"COUNT":5,"PERCENT":50},
+                            {"ITEM_ID":3,"COUNT":1,"PERCENT":25}
+                        ]
+                    }
+                ]
+            },
+            2:{
+                1:[
+                    {
+                        "Name": "NicoNico",
+                        "LV": [1],
+                        "Effects":{},
+                        "Equipments":{},
+                        "Drops": [
+                            {"ITEM_ID":1,"COUNT":10,"PERCENT":100},
+                            {"ITEM_ID":2,"COUNT":5,"PERCENT":50},
+                            {"ITEM_ID":3,"COUNT":1,"PERCENT":25}
+                        ]
+                    },
+                    {
+                        "Name": "NicoNico",
+                        "LV": [5],
+                        "Effects":{},
+                        "Equipments":{},
+                        "Drops": [
+                            {"ITEM_ID":1,"COUNT":10,"PERCENT":100},
+                            {"ITEM_ID":2,"COUNT":5,"PERCENT":50},
+                            {"ITEM_ID":3,"COUNT":1,"PERCENT":25}
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+}

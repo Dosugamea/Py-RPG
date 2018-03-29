@@ -1,0 +1,33 @@
+{
+    "コンバット":{
+        "Image": null,
+        "Clerk":"NYN姉貴",
+        "Messages":{
+            "Welcome":"いらっしゃいませ～",
+            "Buy":"まいどありぃ",
+            "Sell":"まいどありぃ",
+            "Soldout":"ないです"
+        }
+        "Sell":{
+            "Deny": true,
+            "import_Buy":true
+            "Items":[
+               {
+                "ID":1,
+                "Cnt":1,
+                "Price":100,
+               }
+            ]
+        }
+        "Buy":{
+            "Deny": true,
+            "Items":[
+                {
+                "ID":2,
+                "Cnt":1,
+                "Price":100
+                }
+            ]
+        }
+    }
+}
