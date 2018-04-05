@@ -47,6 +47,10 @@ class RPG(Logger,Choicer):
     cl = Client()
     rpgdata = {
         "User":{
+            "Stone": 100,
+            "Money": 100,
+            "Inventory":{},
+            "Items":{},
             "Stats":{
                 "Log":[],
                 "Screen":"menu",
@@ -109,8 +113,14 @@ class RPG(Logger,Choicer):
                 self.add_log("[Shop]\nWhich Shop to go?",msg)
                 self.add_log(self.combine(self.choice_text(["A","B","C","Modoru"])),msg)
             elif stat["MenuID"] == 4:
-                self.add_log("[Setting]\nWhich Setting to ?",msg)
-                self.add_log(self.combine(self.choice_text(["A","B","C","Modoru"])),msg)
+                if stat["Setting_ID"] == 0:
+                    self.add_log("[Setting]\nWhich Setting to ?",msg)
+                    self.add_log(self.combine(self.choice_text(["Inventory","Equipment","Skill","Use_Announce","Use_Kana","Modoru"])),msg)
+                elif stat["Setting_ID"] == 1:
+                    self.add_log("[Inventory]\n<Now You have>",msg)
+                    self.add_log(self.combine(self.choice_text(self.rpgdata[msg._from]["Inventory"].keys())),msg)
+                    self.add_log("<Storage>",msg)
+                    self.add_log(self.combine(self.choice_text(self.rpgdata[msg._from]["Items"].keys())),msg)
             self.send_log(msg)
             self.rpgdata[msg._from]["Stats"]["Menu"]["Selecting"] = True
         else:
@@ -125,8 +135,11 @@ class RPG(Logger,Choicer):
                     elif choice == "Work":
                         stat["MenuID"] = 2
                         stat["Work_MID"] = 0
-                    elif choice == "Shop": stat["MenuID"] = 3
-                    elif choice == "Setting": stat["MenuID"] = 4
+                    elif choice == "Shop":
+                        stat["MenuID"] = 3
+                    elif choice == "Setting":
+                        stat["MenuID"] = 4
+                        stat["Setting_ID"] = 0
                     self.rpgdata[msg._from]["Stats"]["Menu"]["Selecting"] = False
                     self.process_menu(msg)
             #クエストメニュー
@@ -163,7 +176,7 @@ class RPG(Logger,Choicer):
             elif stat["MenuID"] == 3:
                 choice = self.choicer(msg.text,["A","B","C","Modoru"])
                 if choice != None:
-                    if choice == "看板持ち":
+                    if choice == "":
                         pass
                     elif choice == "Modoru":
                         stat["MenuID"] = 0
@@ -171,10 +184,10 @@ class RPG(Logger,Choicer):
                     self.process_menu(msg)
             #設定メニュー
             elif stat["MenuID"] == 4:
-                choice = self.choicer(msg.text,["A","B","C","Modoru"])
+                choice = self.choicer(msg.text,["Inventory","Equipment","Skill","Use_Announce","Use_Kana","Modoru"])
                 if choice != None:
-                    if choice == "看板持ち":
-                        pass
+                    if choice == "Inventory":
+                        stat["Setting_ID"] = 1
                     elif choice == "Modoru":
                         stat["MenuID"] = 0
                     self.rpgdata[msg._from]["Stats"]["Menu"]["Selecting"] = False
