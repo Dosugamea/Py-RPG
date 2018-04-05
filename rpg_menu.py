@@ -70,8 +70,8 @@ class RPG(Logger,Choicer):
     def process_rpg(self,msg):
         if self.rpgdata[msg._from]["Stats"]["Screen"] == "menu": self.process_menu(msg)
         elif self.rpgdata[msg._from]["Stats"]["Screen"] == "quest": self.process_quest(msg)
-        elif self.rpgdata[msg._from]["Stats"]["Screen"] == "work": self.process_quest(msg)
-        elif self.rpgdata[msg._from]["Stats"]["Screen"] == "shop": self.process_quest(msg)
+        elif self.rpgdata[msg._from]["Stats"]["Screen"] == "work": self.process_work(msg)
+        elif self.rpgdata[msg._from]["Stats"]["Screen"] == "shop": self.process_shop(msg)
     
     def process_quest(self,msg):
         print("Called Quest")
@@ -102,12 +102,15 @@ class RPG(Logger,Choicer):
                 elif stat["Quest_MID"] == 3:
                     self.add_log("[EventQuest]\nWhich Quest to go?",msg)
                 self.add_log(self.combine(self.choice_text(self.quest_sel_dict[stat["Quest_MID"]])),msg)
-            elif stat["MenuID"] == 1:
-                self.add_log("[Work]\nWhich Work to go?",msg)
             elif stat["MenuID"] == 2:
-                self.add_log("[Shop]\nWhich Shop to go?",msg)
+                self.add_log("[Work]\nWhich Work to go?",msg)
+                self.add_log(self.combine(self.choice_text(["看板もち","交通量調査","警備員","パン工場","窓そうじ","工事現場","Modoru"])),msg)
             elif stat["MenuID"] == 3:
+                self.add_log("[Shop]\nWhich Shop to go?",msg)
+                self.add_log(self.combine(self.choice_text(["A","B","C","Modoru"])),msg)
+            elif stat["MenuID"] == 4:
                 self.add_log("[Setting]\nWhich Setting to ?",msg)
+                self.add_log(self.combine(self.choice_text(["A","B","C","Modoru"])),msg)
             self.send_log(msg)
             self.rpgdata[msg._from]["Stats"]["Menu"]["Selecting"] = True
         else:
@@ -119,7 +122,9 @@ class RPG(Logger,Choicer):
                     if choice == "Quest":
                         stat["MenuID"] = 1
                         stat["Quest_MID"] = 0
-                    elif choice == "Work": stat["MenuID"] = 2
+                    elif choice == "Work":
+                        stat["MenuID"] = 2
+                        stat["Work_MID"] = 0
                     elif choice == "Shop": stat["MenuID"] = 3
                     elif choice == "Setting": stat["MenuID"] = 4
                     self.rpgdata[msg._from]["Stats"]["Menu"]["Selecting"] = False
@@ -144,6 +149,36 @@ class RPG(Logger,Choicer):
                                 self.process_quest(msg)
                             else:
                                 self.process_menu(msg)
+            #ワークメニュー
+            elif stat["MenuID"] == 2:
+                choice = self.choicer(msg.text,["看板もち","交通量調査","警備員","パン工場","窓そうじ","工事現場","Modoru"])
+                if choice != None:
+                    if choice == "看板持ち":
+                        pass
+                    elif choice == "Modoru":
+                        stat["MenuID"] = 0
+                    self.rpgdata[msg._from]["Stats"]["Menu"]["Selecting"] = False
+                    self.process_menu(msg)
+            #ショップメニュー
+            elif stat["MenuID"] == 3:
+                choice = self.choicer(msg.text,["A","B","C","Modoru"])
+                if choice != None:
+                    if choice == "看板持ち":
+                        pass
+                    elif choice == "Modoru":
+                        stat["MenuID"] = 0
+                    self.rpgdata[msg._from]["Stats"]["Menu"]["Selecting"] = False
+                    self.process_menu(msg)
+            #設定メニュー
+            elif stat["MenuID"] == 4:
+                choice = self.choicer(msg.text,["A","B","C","Modoru"])
+                if choice != None:
+                    if choice == "看板持ち":
+                        pass
+                    elif choice == "Modoru":
+                        stat["MenuID"] = 0
+                    self.rpgdata[msg._from]["Stats"]["Menu"]["Selecting"] = False
+                    self.process_menu(msg)
 
 RPGer = RPG()
 RPGer.process_rpg(Message())
