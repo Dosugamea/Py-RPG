@@ -153,24 +153,32 @@ class RPG(Logger,Choicer):
                 stat["StepID"] = 0
             #"プレイヤーが"買う           
             elif stat["StepID"] == 2:
-                self.add_log("< 商品リスト >",msg)
+                self.add_log("< 商品リスト >\n",msg)
+                self.add_log("所持金: %sコイン\n"%(self.rpgdata[msg._from]["Money"]),msg)
                 if "Import_Buy" in stat["Current_Shop"]["Sell"]:
                     items = stat["Current_Shop"]["Buy"]["Items"]
                 else:
                     items = stat["Current_Shop"]["Sell"]["Items"]
+                itl = []
                 for item in items:
                     im = self.itemdata[str(item["ID"])]
-                    self.add_log("[%s] %s個 %sコイン"%(im["Name"],item["Cnt"],item["Price"]),msg)
+                    itl.append(" %s %s個%sコイン"%(im["Name"],item["Cnt"],item["Price"]))
+                self.add_log(self.combine(self.choice_text(itl)),msg)
+                stat["Current_Shop"]["Items"] = itl
             #"プレイヤーが"売る
             elif stat["StepID"] == 3:
                 self.add_log("< 買取リスト >",msg)
+                self.add_log("所持金: %sコイン\n"%(self.rpgdata[msg._from]["Money"]),msg)
                 if "Import_Sell" in stat["Current_Shop"]["Buy"]:
                     items = stat["Current_Shop"]["Sell"]["Items"]
                 else:
                     items = stat["Current_Shop"]["Item"]["Items"]
+                itl = []
                 for item in items:
                     im = self.itemdata[str(item["ID"])]
-                    self.add_log("[%s] %s個 %sコイン"%(im["Name"],item["Cnt"],item["Price"]),msg)
+                    itl.append(" %s %s個%sコイン"%(im["Name"],item["Cnt"],item["Price"]))
+                self.add_log(self.combine(self.choice_text(itl)),msg)
+                stat["Current_Shop"]["Items"] = itl
             self.send_log(msg)
             stat["Selecting"] = True
         #入力受付部
