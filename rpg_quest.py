@@ -122,7 +122,8 @@ class Q_Utility(object):
     def new_quest(self,msg):
         stat = self.rpgdata[msg._from]["Stats"]["Quest"]
         stat["Current_Quest"] = self.questdata[stat["Quest_Name"]]
-        stat["Current_Position"] = 0
+        stat["Current_Position"] = random.choice(self.questdata[stat["Quest_Name"]]["Start"]) -1
+        stat["Current_Floor"] = 1
         stat["Player"] = self.new_entity(1,"MID")
         self.rpgdata[msg._from]["Stamina"] -= stat["Current_Quest"]["Stamina"]
         self.add_log("<<< %s に出発します >>>\n"%(stat["Quest_Name"]),msg)
@@ -132,7 +133,7 @@ class Q_Utility(object):
     def log_q_status(self,msg):
         stat = self.rpgdata[msg._from]["Stats"]["Quest"]
         self.add_log("",msg)
-        self.add_log("[フロア%s  HP: %s/%s MP: %s/%s]"%(stat["Current_Position"]+1,stat["Player"]["HP"],stat["Player"]["MAX_HP"],stat["Player"]["MP"],stat["Player"]["MAX_MP"]),msg)
+        self.add_log("[フロア%s  HP: %s/%s MP: %s/%s]"%(stat["Current_Floor"],stat["Player"]["HP"],stat["Player"]["MAX_HP"],stat["Player"]["MP"],stat["Player"]["MAX_MP"]),msg)
         self.add_log("%sはどうする?"%(self.rpgdata[msg._from]["Name"]),msg)
         self.add_log(' あ : 進む\n い : 休む\n う : アイテム\n え : マップ\n お : 撤退',msg)
         
@@ -146,19 +147,35 @@ class Q_Process(object):
         if "Message" in data: self.add_log(data["Message"],msg)
         if data["Type"] == 2: self.Damage(data,msg)
         elif data["Type"] == 3: self.Heal(data,msg)
-        elif data["Type"] == 4: self.Treasure(data,msg)
+        elif data["Type"] == 4:
+            #Treasure
+            stat["Current_Choices"] = data
+            stat["Selecting"] = True
         elif data["Type"] == 5: self.Battle(data,msg)
         elif data["Type"] == 6: self.Jump(data,msg)
-        elif data["Type"] == 7: self.Switch(data,msg)
+        elif data["Type"] == 7:
+            #Jump
+            stat["Current_Choices"] = data
+            stat["Selecting"] = True
         elif data["Type"] == 8: self.Stop(data,msg)
         elif data["Type"] == 9: self.Goal(data,msg)
         stat["Current_Position"] += 1
-        self.log_q_status(msg)
+        stat["Current_Floor"] += 1
+        #見た目を弄る
+        if stat["Selecting"]:
+            if stat["Current_Choices"]["Type"] == 4:
+                self.add_log(self.combine(self.choice_text(["開ける","開けない"],True)),msg)
+            elif stat["Current_Choices"]["Type"] == 7:
+                self.add_log(self.combine(self.choice_text([d[0] for d in stat["Current_Choices"]["Param"]],True)),msg)
+            else:
+                raise ValueError
+        elif data["Type"] not in [8,9]:
+            self.log_q_status(msg)
         self.send_log(msg)
     
     #コマンド:休む
     def process_rest(self,msg):
-        pass
+        stat = self.rpgdata[msg._from]["Stats"]["Quest"]
         
     def Damage(self,data,msg):
         stat = self.rpgdata[msg._from]["Stats"]["Quest"]
@@ -184,20 +201,26 @@ class Q_Process(object):
             self.game_check(msg)
         
     def Heal(self,data,msg):
+        stat = self.rpgdata[msg._from]["Stats"]["Quest"]
         '''
         3: 回復 Param["最低値","最大値"]
         '''
         hel = data["Param"]
         if len(hel) == 1:
-            if isinstance(hel[0], str): hel = int(self.user.MAX_HP * (int(hel[0][:hel[0].find("%")])/100))
+            if isinstance(hel[0], str):
+                hel = int(stat["Player"]["MAX_HP"] * (int(hel[0][:hel[0].find("%")])/100))
+            else:
+                hel = hel[0]
         elif len(hel) == 2:
-            hel = []
-            if isinstance(hel[0], str): hel[0] = int(self.user.MAX_HP * (int(hel[0][:hel[0].find("%")])/100))
-            if isinstance(hel[1], str): hel[1] = int(self.user.MAX_HP * (int(hel[1][:hel[1].find("%")])/100))
-            hel = random.randint(hel[0],hel[1])
-        self.user.HP += hel
-        print("%sは%s 回復した"%(self.user.name,hel))
-        if self.user.HP > self.user.MAX_HP: self.user.HP = self.user.MAX_HP
+            if isinstance(hel[0], str): st = int(stat["Player"]["HP"] * (int(hel[0][:hel[0].find("%")])/100))
+            else: st = hel[0]
+            if isinstance(hel[1], str): ed = int(stat["Player"]["HP"] * (int(hel[1][:hel[1].find("%")])/100))
+            else: ed = hel[1]
+            hel = random.randint(st,ed)
+        stat["Player"]["HP"] += hel
+        self.add_log("%sは%s 回復した"%(stat["Player"]["Name"],hel),msg)
+        if stat["Player"]["HP"] > stat["Player"]["MAX_HP"]:
+            stat["Player"]["HP"] = stat["Player"]["MAX_HP"]
         
     def Get_Item(self,itemlist,msg):
         '''
@@ -205,33 +228,31 @@ class Q_Process(object):
         '''
         print("引数: %s"%(itemlist))
         
-    def Treasure(self,data,msg):
+    def Treasure(self,choice,msg):
+        data = self.rpgdata[msg._from]["Stats"]["Quest"]["Current_Choices"]
         '''
         4: 宝箱 Param[[ドロップアイテムリスト],本物である確率,[偽物である場合の編成リスト]]
         '''
-        while True:
-            inp = input("開けますか? >>")
-            if inp == "y":
-                #ドロップアイテムリストだけなら リストをGetに投げる
-                if len(data["Param"]) == 1:
-                    self.Get_Item(data["Param"][0])
-                elif len(data["Param"]) == 2:
-                    per = random.randint(1,100)
-                    if per <= data["Param"][1]:
-                        self.Get_Item(data["Param"][0])
-                    else:
-                        print("中身は空だった...")
+        if choice == "開く":
+            if len(data["Param"]) == 1:
+                self.Get_Item(data["Param"][0],msg)
+            elif len(data["Param"]) == 2:
+                per = random.randint(1,100)
+                if per <= data["Param"][1]:
+                    self.Get_Item(data["Param"][0],msg)
                 else:
-                    per = random.randint(1,100)
-                    if per <= data["Param"][1]:
-                        self.Get_Item(data["Param"][0])
-                    else:
-                        print("!? これは宝箱じゃないぞ!")
-                        self.Battle(random.choice(self.data["Param"][2]))
-                break
-            elif inp == "n":
-                print("罠かもしれない。 開けないことにした...")
-                break
+                    self.add_log("中身は空だった...")
+            else:
+                per = random.randint(1,100)
+                if per <= data["Param"][1]:
+                    self.Get_Item(data["Param"][0],msg)
+                else:
+                    self.add_log("!? これは宝箱じゃないぞ!",msg)
+                    self.Battle(random.choice(data["Param"][2]))
+        else:
+            self.add_log("罠かもしれない。 開けないことにした...")
+        self.rpgdata[msg._from]["Stats"]["Quest"]["Selecting"] = False
+        self.process_go(msg)
         
     def Battle(self,data,msg):
         '''
@@ -243,41 +264,55 @@ class Q_Process(object):
         '''
         6: ジャンプ Param[ジャンプ先ID,ランダムジャンプ先ID,ランダムジャンプ先ID...]
         '''
-        self.cp = random.choice(data["Param"]) -1
+        self.rpgdata[msg._from]["Stats"]["Quest"]["Current_Position"] = random.choice(data["Param"])-2
     
-    def Switch(self,data,msg):
+    def Switch(self,choice,msg):
+        stat = self.rpgdata[msg._from]["Stats"]["Quest"]
         '''
         7: 分かれ道 Param[[選択肢名,ジャンプ先ID],[選択肢名,ジャンプ先ID]...]
         '''
-        jumped = False
-        for choice in data["Param"]:
-            print("->%s"%(choice[0]))
-        while True:
-            if jumped: break
-            inp = input('どこに進む? >>')
-            for choice in data["Param"]:
-                if inp == choice[0]:
-                    self.cp = choice[1]
-                    self.GO()
-                    jumped = True
-                    break
+        for c in stat["Current_Choices"]["Param"]:
+            if c[0] == choice:
+                stat["Current_Position"] = c[1]
+                stat["Selecting"] = False
+                self.process_go(msg)
 
     def Stop(self,data,msg):
         '''
         8: 行き止まり Param[ドロップアイテムデータ,ドロップアイテムデータ...]
         '''
         #強制終了フラグを立てる
-        self.cp = -2
+        print("STOP")
         if "Param" in data: self.Get_Item(data["Param"])
+        self.send_log(msg)
+        self.End_Quest("Stop",msg)
         
     def Goal(self,data,msg):
         '''
         9: ゴール Param[ドロップアイテムデータ,ドロップアイテムデータ...]
         '''
-        self.cp = -1
+        print("GOAL")
         if "Param" in data: self.Get_Item(data["Param"])
+        self.send_log(msg)
+        self.rpgdata[msg._from]["Stats"]["Quest"]["Questing"] = False
+        self.End_Quest("Goal",msg)
     
-
+    def End_Quest(self,result,msg):
+        data = self.rpgdata[msg._from]["Stats"]["Quest"]
+        self.add_log("<リザルト>",msg)
+        self.add_log("\n[ランク]",msg)
+        if result == "Goal":
+            self.add_log("　　クリア",msg)
+            self.add_log("[報酬]",msg)
+            self.add_log("　コイン x 1000",msg)
+        elif result == "Stop":
+            self.add_log(" 帰還",msg)
+            self.add_log("[報酬]",msg)
+            self.add_log("None",msg)
+        elif result == "Dead":
+            self.add_log(" 撤退",msg)
+            self.add_log("[報酬]",msg)
+            self.add_log("　なし",msg)
 
 class RPG(Logger,Choicer,Q_Process,Q_Utility):
     cl = Client()
@@ -301,8 +336,21 @@ class RPG(Logger,Choicer,Q_Process,Q_Utility):
                 "Quest":{
                     "Quest_Name":"デバッグクエスト",
                     "Current_Position":0,
+                    "Current_Floor":1,
                     "Current_Quest":{},
-                    "Questing": True
+                    "Current_Got":{},
+                    "Questing": True,
+                    "Selecting":False
+                },
+                "Battle":{
+                    "Log":[],
+                    "MenuID":0,
+                    "Turn":0,
+                    "I_Turn":0,
+                    "Got":{},
+                    "Entities":{},
+                    "Process_Turn":True,
+                    "Selecting":False,
                 },
                 "Shop":{
                     "ShopID":0,
@@ -332,24 +380,38 @@ class RPG(Logger,Choicer,Q_Process,Q_Utility):
     
     def process_quest(self,msg):
         stat = self.rpgdata[msg._from]["Stats"]["Quest"]
-        choice = self.choicer(msg.text,["進む","休む","アイテム","マップ","撤退","はい","いいえ"])
-        if choice == "進む":
-            self.process_go(msg)
-        elif choice == "休む":
-            self.process_rest(msg)
-        elif choice == "アイテム":
-            pass
-        elif choice == "マップ":
-            #画像を送るかMap -> Text 関数を使うか
-            pass
-        elif choice == "撤退":
-            self.add_log("撤退するとクエスト失敗になりますが\nよろしいですか?",msg)
-            self.add_log(" か: はい\n き: いいえ",msg)
-            self.send_log(msg)
-        elif choice == "はい":
-            pass
-        elif choice == "いいえ":
-            pass
+        if stat["Selecting"]:
+            #マップタイプによる選択肢
+            if stat["Current_Choices"]["Type"] == 4:
+                choice = self.choicer(msg.text,["開く","開かない"])
+                self.Treasure(choice,msg)
+            #マップタイプ: 分かれ道
+            elif stat["Current_Choices"]["Type"] == 7:
+                choice = self.choicer(msg.text,[d[0] for d in stat["Current_Choices"]["Param"]])
+                self.Switch(choice,msg)
+            else:
+                raise ValueError
+        else:
+            #デフォルトの進行選択肢
+            choice = self.choicer(msg.text,["進む","休む","アイテム","マップ","撤退","はい","いいえ"])
+            #はい と いいえ はめんどくさいので妥協
+            if choice == "進む":
+                self.process_go(msg)
+            elif choice == "休む":
+                self.process_rest(msg)
+            elif choice == "アイテム":
+                pass
+            elif choice == "マップ":
+                #画像を送るかMap -> Text 関数を使うか
+                pass
+            elif choice == "撤退":
+                self.add_log("撤退するとクエスト失敗になりますが\nよろしいですか?",msg)
+                self.add_log(" か: はい\n き: いいえ",msg)
+                self.send_log(msg)
+            elif choice == "はい":
+                pass
+            elif choice == "いいえ":
+                pass
 
 
 RPGer = RPG()
