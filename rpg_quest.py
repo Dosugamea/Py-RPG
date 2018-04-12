@@ -140,11 +140,16 @@ class Q_Utility(object):
         
 #クエスト進行 処理本体
 class Q_Process(object):
+    #関数を本体に追加
+    def addExecFunction(self,Name,Func):
+        self.ExecDatas[Name] = Func
+
     #コマンド:進む
     def process_go(self,msg):
         stat = self.rpgdata[msg._from]["Stats"]["Quest"]
         data = stat["Current_Quest"]["Map"][stat["Current_Position"]]
         if "Message" in data: self.add_log(data["Message"],msg)
+        if "Exec" in data: self.ExecDatas[data["Exec"]]()
         if data["Type"] == 2: self.Damage(data,msg)
         elif data["Type"] == 3: self.Heal(data,msg)
         elif data["Type"] == 4:
