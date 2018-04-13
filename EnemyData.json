@@ -12,28 +12,28 @@
         "SPD": 100,
         "LUK": 10,
         "Percents":{
-            75:"Defaults",
-            100:"Specials"
+            "75":"Defaults",
+            "100":"Specials"
         },
         "Skills": {
             "Defaults":{
                 "Auto":true,
-                1:{
+                "1":{
                     "Name":"月額540円",
                     "Entire": true
                 },
-                2:{
+                "2":{
                     "Name":"GINZA",
                     "Entire": true
                 },
-                3:{
+                "3":{
                     "Name":"原宿",
                     "Entire": true  
                 }
             },
             "Specials":{
                 "Auto":true,
-                10:{
+                "10":{
                     "Entire": false,
                     "Name":"いいじゃないココが盛り上がっていれば",
                     "About":"それは遅刻の言い訳にならない。",
@@ -41,7 +41,7 @@
                     "HIT":100,
                     "TYPE":0
                 },
-                20:{
+                "20":{
                     "Entire": false,
                     "Name":"デクレッシェンド",
                     "About":"独自の最先端機能を搭載する予定。",
@@ -49,7 +49,7 @@
                     "HIT":100,
                     "TYPE":0
                 },
-                100:{
+                "100":{
                     "Entire": false,
                     "Name":"みんな空気読め",
                     "About":"皆さんのコンテンツやコメントを消したいわけではないのです。",
@@ -59,8 +59,8 @@
                 }
             },
             "Charge":{
-                7:{
-                    1:{
+                "7":{
+                    "1":{
                         "Entire": true,
                         "Name":"ニコニコ本社が池袋に誕生",
                         "About": "世界一爆発され、喜ばれた建物",
