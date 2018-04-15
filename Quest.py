@@ -133,9 +133,10 @@ class Q_Process(object):
         elif "Message" not in data:
             #メッセージがなければスルーして次へ(Jump)
             self.process_go(msg)
-        elif data["Type"] not in [8,9]:
+        elif data["Type"] not in [8,9,5]:
             self.log_q_status(msg)
-        self.send_log(msg)
+        if data["Type"] != 5:
+            self.send_log(msg)
     
     #コマンド:休む
     def process_rest(self,msg):

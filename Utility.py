@@ -41,6 +41,13 @@ class Choicer(object):
     def choice_text(self,ls,kana=False):
         if kana: return [ " %s : %s"%(self.choice_dict[i+1],l) for i,l in enumerate(ls)]
         else: return [ " %s : %s"%(i+1,l) for i,l in enumerate(ls)]
+    #選択肢一覧を表示する
+    def choice_list(self,ls=["A","B","C"],kana=True):
+        if kana:
+            kanas = list(self.choice_dict.keys())
+            return ["%s : %s"%(kanas[i],t) for i,t in enumerate(ls)]
+        else:
+            return ["%s : %s"%(i+1,t) for i,t in enumerate(ls)]
     def combine(self,ls):
         text = ""
         for l in ls:

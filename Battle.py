@@ -58,12 +58,14 @@ class B_Entity(object):
             e["ATK"] = int(10 + lv*0.2)
             e["MAT"] = int(10 + lv*0.15)
             e["SPD"] = int(20 + lv*0.1)
+            self.rpgdata[mid]["Skills"] = deepcopy(self.skill_dict)
             e["Skills"] = self.rpgdata[mid]["Skills"]
             #e["Deny"] = RPG.rpgdata[mid]["Deny"]
         return e
     #エンティティにIDを付け直す
     def reid_entities(self,battle):
         es = deepcopy(battle["Entities"])
+        battle["Entities"] = OrderedDict()
         #0=その他 1=プレイヤー 2=敵
         ns = [0,1,1]
         for e in es:
@@ -153,7 +155,6 @@ class B_Entity(object):
                 log("%sは%s回復した"%(entity["Name"],int((e["HP"]*0.2)*s["Power"])),msg)
             #気合
             elif s["TYPE"] == 11:
-                entity["Effects"][s]["Turn"] = 2
                 entity["MAT"] += int((e["MAT"]*0.2)*s["Power"])
                 entity["ATK"] += int((e["ATK"]*0.2)*s["Power"])
             #瀕死
@@ -213,7 +214,13 @@ class B_Utility(object):
         self.add_log("\nあなた\n"+"\n".join(texts[0])+"\n敵\n"+"\n".join(texts[1])+"\n",msg)
         self.add_log("%sはどうする?"%(entities["p1"]["Name"]),msg)
         self.add_log(' あ : 攻撃\n い : 魔法\n う : 防御\n え : アイテム\n お : 逃走',msg)
-
+    #選択肢一覧を表示する
+    def choice_list(self,ls=["A","B","C"],kana=True):
+        if kana:
+            kanas = list(self.choice_dict.keys())
+            return ["%s : %s"%(kanas[i],t) for i,t in enumerate(ls)]
+        else:
+            return ["%s : %s"%(i+1,t) for i,t in enumerate(ls)]
     def key_by_num(self,dict,num):
         ks = dict.keys()
         for i,k in enumerate(ks):
@@ -222,6 +229,8 @@ class B_Utility(object):
     #状態異常一覧を返す
     def effect_list(self,entity):
         return [self.effect_dict[e["TYPE"]] for e in entity["Effects"]]
+    def name_list(self,enemys):
+        return [e["Name"] for e in enemys]
     #辞書からランダムに選んで要素を返す
     def pick_by_per(self,dic):
         if "Auto" in dic:
@@ -234,6 +243,23 @@ class B_Utility(object):
                 if num <= int(key): return dic[key]
             raise ValueError 
 class B_Process(object):
+    def process_battle(self,msg):
+        battle = self.rpgdata[msg._from]["Stats"]["Battle"]
+        #戦闘を回すかどうか
+        if battle["Process_Turn"]:
+            #プレイヤーのターンになるまで回す
+            while True:
+                flag = self.process_turn(msg)
+                if flag: break
+            if self.userdata[msg._from]["State"]["RPG"]["Game"]:
+                #プレイヤーのターンが回ってきたら表示する
+                self.log_status(msg)
+                self.send_log(msg)
+            #戦闘回してない
+            self.rpgdata[msg._from]["Stats"]["Battle"]["Process_Turn"] = False
+        else:
+            if self.userdata[msg._from]["State"]["RPG"]["Game"]:
+                self.process_player(msg)
     #新規バトルの作成
     def new_battle(self,quest,team,wave,msg):
         b = OrderedDict()
@@ -263,27 +289,32 @@ class B_Process(object):
         self.add_log("\n".join(texts)+"\nが現れた!",msg)
         self.send_log(msg)
         self.process_battle(msg)
-    #ターン処理(ここを中心に戦闘を回す)
-    def process_turn(self,msg):
-        print("Called Process_Turn")
-        battle = self.rpgdata[msg._from]["Stats"]["Battle"]
-        entity = battle["Entities"][self.key_by_num(battle["Entities"],battle["I_Turn"])]
-        if entity["EType"] == 2:
-            entity = self.process_enemy(entity,msg)
-        elif entity["EType"] == 1:
-            return True
-        self.process_effects_after(entity,msg)
-        #battle["Entities"][self.key_by_num(battle["Entities"],battle["I_Turn"])] = entity
+    def add_turn(self,msg,battle):
+        battle["Process_Turn"] = True
         battle["I_Turn"] += 1
         if battle["I_Turn"] >= len(battle["Entities"]):
             battle["I_Turn"] = 0
             battle["Turn"] += 1
-        #print(battle["Turn"])
+            #self.process_effects_after(self.rpgdata[msg._from]["Stats"]["Battle"]["Entities"]["p1"],msg)
         self.rpgdata[msg._from]["Stats"]["Battle"] = battle
+    #ターン処理(ここを中心に戦闘を回す)
+    def process_turn(self,msg):
+        print("Called Process_Turn")
+        battle = self.rpgdata[msg._from]["Stats"]["Battle"]
+        if self.userdata[msg._from]["State"]["RPG"]["Game"]:
+            entity = battle["Entities"][self.key_by_num(battle["Entities"],battle["I_Turn"])]
+            if entity["EType"] == 2:
+                entity = self.process_enemy(entity,msg)
+            elif entity["EType"] == 1:
+                self.process_effects_before(entity,msg)
+                return True
+            self.add_turn(msg,battle)
+        else:
+            return True
     #敵の処理 (プレイヤーに対して攻撃する)
     def process_enemy(self,enemy,msg):
         print("Called Process_Enemy")
-        enemy = self.process_effects_before(enemy)
+        self.process_effects_before(enemy,msg)
         enemy["CHG"] += 1
         #攻撃先は完全ランダム
         player = random.choice(self.gen_players(msg))
@@ -305,22 +336,43 @@ class B_Process(object):
                 if skill["Entire"]: self.magic_attack_all(enemy,skill,1,msg)
                 else: self.magic_attack(enemy,player,skill,msg)
         else:
-            if skill["Entire"]: self.magic_attack_all(enemy,skill,2,msg)
+            if skill["Entire"]: self.magic_attack_all(enemy,skill,1,msg)
             else: self.magic_attack(enemy,player,skill,msg)
         if enemy["CHG"] > enemy["MAX_CHG"]: enemy["CHG"] = 0
         return enemy
     #プレイヤーの処理(メッセージ入力がここに飛んでくる)
     def process_player(self,msg):
+        if msg.toType == 0: msg.to = msg._from
         print("Called Process_Player")
         battle = self.rpgdata[msg._from]["Stats"]["Battle"]
         #攻撃先の選択
         if battle["Selecting"]:
             #攻撃
             if battle["MenuID"] == 0:
-                self.rpgdata[msg._from]["Stats"]["Battle"]["Selecting"] = False
+                choice = self.process_select_to(msg)
+                if choice != None:
+                    self.rpgdata[msg._from]["Stats"]["Battle"]["Selecting"] = False
+                    self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 0
+                    self.attack(battle["Entities"]["p1"],battle["Entities"]["e1"],msg)
+                    self.add_turn(msg,battle)
+                    self.process_battle(msg)
             #魔法
             elif battle["MenuID"] == 1:
-                self.rpgdata[msg._from]["Stats"]["Battle"]["Selecting"] = False
+                if msg.text != "も":
+                    choice = self.process_select_to(msg)
+                    if choice != None: 
+                        battle["Entities"]["p1"]["MP"] -= battle["Entities"]["p1"]["Skills"][self.rpgdata[msg._from]["Stats"]["Battle"]["SelectedSkill"]]["Cost"]
+                        self.rpgdata[msg._from]["Stats"]["Battle"]["Selecting"] = False
+                        self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 0
+                        self.Skill(battle["Entities"]["p1"],choice,msg,self.rpgdata[msg._from]["Stats"]["Battle"]["SelectedSkill"])
+                        self.add_turn(msg,battle)
+                        self.process_battle(msg)
+                else:
+                    self.rpgdata[msg._from]["Stats"]["Battle"]["Selecting"] = False
+                    self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 0
+                    self.add_log("%sはどうする?"%(battle["Entities"]["p1"]["Name"]),msg)
+                    self.add_log(' あ : 攻撃\n い : 魔法\n う : 防御\n え : アイテム\n お : 逃走',msg)
+                    self.send_log(msg)
         else:
             #コマンドの選択
             if battle["MenuID"] == 0:
@@ -331,26 +383,32 @@ class B_Process(object):
                         self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 0
                         enemys = self.gen_enemys(msg)
                         if len(enemys) == 1:
-                            self.attack(battle["Entities"]["p1"],battle["Entities"]["e1"],msg,"e1")
-                            battle["Process_Turn"] = True
-                            battle["I_Turn"] += 1
-                            if battle["I_Turn"] >= len(battle["Entities"]):
-                                battle["I_Turn"] = 0
-                                battle["Turn"] += 1
+                            self.attack(battle["Entities"]["p1"],battle["Entities"]["e1"],msg)
+                            self.add_turn(msg,battle)
                             self.process_battle(msg)
                         else:
-                            self.cl.sendMessage("攻撃先は?"+"\n".join(self.choice_list(enemys))+"\n も : 戻る")
+                            self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 0
                             self.rpgdata[msg._from]["Stats"]["Battle"]["Selecting"] = True
+                            self.cl.sendMessage("攻撃先は?\n"+"\n".join(self.choice_list([e["Name"] for e in enemys]))+"\n も : 戻る")
                     elif choice == "魔法":
                         self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 1
-                        self.cl.sendMessage("どれを使用しますか?"+"\n".join(self.choice_list(battle["Entities"]["p1"]["Skills"]))+"\n も : 戻る")
+                        self.cl.sendMessage("どれを使用しますか?\n"+"\n".join(self.choice_list(["%s MP :%s"%(s,battle["Entities"]["p1"]["Skills"][s]["Cost"]) for s in battle["Entities"]["p1"]["Skills"]]))+"\nも : 戻る")
                     elif choice == "防御":
-                        self.defense(battle)
+                        self.defense(msg)
+                        self.add_turn(msg,battle)
+                        self.process_battle(msg)
                     elif choice == "アイテム":
-                        self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 1
-                        self.cl.sendMessage("どれを使用しますか?"+"\n".join(self.choice_list(battle["Entities"]["p1"]["Skills"]))+"\n も : 戻る")
+                        if len(self.rpgdata[msg._from]["Inventory"]) != 0:
+                            self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 2
+                            self.rpgdata[msg._from]["Stats"]["Battle"]["Selecting"] = True
+                            self.cl.sendMessage("どれを使用しますか?\n"+"\n".join(self.choice_list(self.rpgdata[msg._from]["Inventory"]))+"\nも : 戻る")
+                        else:
+                            self.add_log("アイテムはひとつもありません",msg)
+                            self.add_log("%sはどうする?"%(battle["Entities"]["p1"]["Name"]),msg)
+                            self.add_log(' あ : 攻撃\n い : 魔法\n う : 防御\n え : アイテム\n お : 逃走',msg)
+                            self.send_log(msg)
                     elif choice == "逃走":
-                        self.escape(battle)
+                        self.escape(msg)
                 elif msg.toType == 0:
                     self.cl.sendMessage("コマンドが正しくありません")
             #スキルの選択
@@ -360,7 +418,31 @@ class B_Process(object):
                     #有効なスキル名か確認
                     choice = self.choicer(msg.text,list(self.rpgdata[msg._from]["Skills"].keys()))
                     if choice != None:
-                        self.rpgdata[msg._from]["Stats"]["Battle"] = self.Skill(choice,battle)
+                        if battle["Entities"]["p1"]["Skills"][choice]["Cost"] <= battle["Entities"]["p1"]["MP"]:
+                            enemys = self.gen_enemys(msg)
+                            if self.rpgdata[msg._from]["Skills"][choice]["Entire"] or len(enemys) == 1:
+                                battle["Entities"]["p1"]["MP"] -= battle["Entities"]["p1"]["Skills"][choice]["Cost"]
+                                self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 0
+                                self.Skill(battle["Entities"]["p1"],battle["Entities"]["e1"],msg,choice)
+                                self.add_turn(msg,battle)
+                                self.process_battle(msg)
+                            else:
+                                if battle["Entities"]["p1"]["Skills"][choice]["TYPE"] not in [11]:
+                                    self.rpgdata[msg._from]["Stats"]["Battle"]["Selecting"] = True
+                                    self.rpgdata[msg._from]["Stats"]["Battle"]["SelectedSkill"] = choice
+                                    self.cl.sendMessage("攻撃先は?\n"+"\n".join(self.choice_list([e["Name"] for e in enemys]))+"\nも : 戻る")
+                                else:
+                                    battle["Entities"]["p1"]["MP"] -= battle["Entities"]["p1"]["Skills"][choice]["Cost"]
+                                    self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 0
+                                    self.Skill(battle["Entities"]["p1"],battle["Entities"]["e1"],msg,choice)
+                                    self.add_turn(msg,battle)
+                                    self.process_battle(msg)
+                        else:
+                            self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 0
+                            self.add_log("MPが足りません",msg)
+                            self.add_log("%sはどうする?"%(battle["Entities"]["p1"]["Name"]),msg)
+                            self.add_log(' あ : 攻撃\n い : 魔法\n う : 防御\n え : アイテム\n お : 逃走',msg)
+                            self.send_log(msg)
                 else:
                     self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 0
                     self.add_log("%sはどうする?"%(battle["Entities"]["p1"]["Name"]),msg)
@@ -370,10 +452,10 @@ class B_Process(object):
             elif battle["MenuID"] == 2:
                 #も は 戻る固定
                 if msg.text != "も":
-                    #有効なアイテムか確認
-                    choice = self.choicer(list(self.rpgdata[msg._from]["Inventory"].keys()))
+                    #有効なアイテム名か確認
+                    choice = self.choicer(msg.text,list(self.rpgdata[msg._from]["Inventory"].keys()))
                     if choice != None:
-                        self.Item(choice,battle)
+                            pass
                 else:
                     self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 0
                     self.add_log("%sはどうする?"%(battle["Entities"]["p1"]["Name"]),msg)
@@ -384,23 +466,34 @@ class B_Process(object):
                 raise ValueError
     #攻撃先を選ぶ (entityを返す) かーきーなーおーせー
     def process_select_to(self,msg):
-        pass
+        enemys = self.gen_enemys(msg)
+        choice = self.choicer(msg.text,enemys)
+        if choice != None:
+            return choice
     #状態効果によるアップ/ダウン (攻撃前の処理)(未使用)
-    def process_effects_before(self,entity):
-        if entity["Effects"] != {}:
-            for s in entity["Effects"]:
-                pass
-        return entity
-    #状態効果によるアップ/ダウン (攻撃後の処理)
-    def process_effects_after(self,entity,msg):
-        if entity["Effects"] != {}:
+    def process_effects_before(self,entity,msg):
+        print("Called process_effects_before")
+        if entity["Effects"] != []:
             for s in entity["Effects"]:
                 s["Turn"] -= 1
                 if s["Turn"] < 1:
                     self.add_log("%sの効果が切れたようだ"%(self.effect_dict[s["TYPE"]]),msg)
-                    entity = entity["Effects"].remove(s)
-                    entity = self.reset_entity(entity)
-                    entity = self.effect(entity)
+                    entity["Effects"].remove(s)
+                    self.reset_entity(entity)
+                    self.reset_entity_effect(entity)
+    #状態効果によるアップ/ダウン (攻撃後の処理)
+    def process_effects_after(self,entity,msg):
+        print("Called process_effects_after")
+        print(entity["Effects"])
+        if entity["Effects"] != []:
+            for s in entity["Effects"]:
+                print(s)
+                s["Turn"] -= 1
+                if s["Turn"] < 1:
+                    self.add_log("%sの効果が切れたようだ"%(self.effect_dict[s["TYPE"]]),msg)
+                    entity["Effects"].remove(s)
+                    self.reset_entity(entity)
+                    self.reset_entity_effect(entity)
     #フィールドを整える
     def process_field(self,msg):
         battle = self.rpgdata[msg._from]["Stats"]["Battle"]
@@ -410,8 +503,8 @@ class B_Process(object):
         battle["Entities"] = OrderedDict()
         for a in keep_alive:
             battle["Entities"][a] = ens[a]
-        self.reid_entities(self.sort_entities(battle))
-        self.rpgdata[msg._from]["Stats"]["Battle"] = battle
+        battle = self.sort_entities(battle)
+        battle = self.reid_entities(battle)
     #勝敗判定
     def process_check(self,msg):
         #敵がいなくなったら勝ち
@@ -424,7 +517,8 @@ class B_Process(object):
         elif len(self.gen_players(msg)) == 0:
             self.add_log("GAME OVER",msg)
             self.send_log(msg)
-            
+            msg.text = "中断"
+            self.process_rpg(msg)
 #戦闘処理
 class Battle(B_Entity,B_Process,B_Utility):
     commands = ["攻撃","魔法","防御","アイテム","逃走"]
@@ -440,50 +534,41 @@ class Battle(B_Entity,B_Process,B_Utility):
         41:"運極",42:"暴走",43:"属昇",44:"属少",45:"全昇",
         46:"全少"
     }
-    
-    def process_battle(self,msg):
-        battle = self.rpgdata[msg._from]["Stats"]["Battle"]
-        #戦闘を回すかどうか
-        if battle["Process_Turn"]:
-            #プレイヤーのターンになるまで回す
-            while True:
-                flag = self.process_turn(msg)
-                if flag: break
-            #プレイヤーのターンが回ってきたら表示する
-            self.log_status(msg)
-            self.send_log(msg)
-            #戦闘回してない
-            self.rpgdata[msg._from]["Stats"]["Battle"]["Process_Turn"] = False
-        else:
-            self.process_player(msg)
-
     #アイテムコマンドが飛んできた
     def Item(self,ID,msg):
         pass
-    #スキルコマンドが飛んできた
-    def Skill(self,skill,player):
-        if "Effect" in user_skill_dict[skill]:
-            if user_skill_dict[skill]["Entire"]:
-                if user_skill_dict[skill]["TYPE"] not in [11]:
-                    self.effect_attack(player,to=Enemy,Skill=user_skill_dict[skill],All=True)
+    #スキルコマンドが飛んできた(toは参照渡し skillはスキルの名称で)
+    def Skill(self,_from,to,msg,skill):
+        skill = _from["Skills"][skill]
+        if "Power" in skill:
+            if skill["Entire"]:
+                if skill["TYPE"] not in [11]:
+                    self.effect_attack_all(_from,skill,2,msg)
                 else:
-                    self.effect_attack(player,to=Player,Skill=user_skill_dict[skill],All=True)
+                    self.effect_attack_all(_from,skill,1,msg)
             else:
-                if user_skill_dict[skill]["TYPE"] not in [11]:
-                    self.effect_attack(player,Skill=user_skill_dict[skill],All=False)
+                if skill["TYPE"] not in [11]:
+                    self.effect_attack(_from,skill,to,msg)
                 else:
-                    self.effect_attack(player,to=player,Skill=user_skill_dict[skill],All=False)
+                    self.effect_attack(_from,skill,_from,msg)
         else:
-            if user_skill_dict[skill]["Entire"]:
-                self.magic_attack_all(player,skill,Enemy)
+            if skill["Entire"]:
+                self.magic_attack_all(_from,skill,1,msg)
             else:
-                at_to = self.process_select_to(Enemy)
-                self.magic_attack(player,at_to,player.Skills[skill])
-        return battle
+                self.magic_attack(_from,to,skill,msg)
     #防御コマンドが飛んできた
-    def Defense(self):
-        #エフェクトを使うように書き直す
-        pass
+    def defense(self,msg):
+        data = {"TYPE":4,"Turn":1,"Power":2}
+        to = self.rpgdata[msg._from]["Stats"]["Battle"]["Entities"]["p1"]
+        to["Effects"].append(data)
+        self.reset_entity(to)
+        self.reset_entity_effect(to)
+        #self.add_log("%sは%s状態になった"%(to["Name"],self.effect_dict[4]),msg)
+        self.add_log("%sは固くなった"%(to["Name"]),msg)
+    #逃げる
+    def escape(self,msg):
+        self.add_log("このバトルは逃げられないぞ!",msg)
+        self.send_log(msg)
     #ダメージ計算
     def gen_damage(self,_from,to,type,msg,Skill=None): 
         if Skill == None: Skill = {"TYPE":_from["TYPE"]}
@@ -507,14 +592,14 @@ class Battle(B_Entity,B_Process,B_Utility):
         or Skill["TYPE"] == 5 and to["TYPE"] == 6
         or Skill["TYPE"] == 6 and to["TYPE"] == 5):
             damage = int(damage * (1+(random.randint(4,5)/10)))
-            self.add_log(" あいしょうはばつぐんだ！")
+            self.add_log(" あいしょうはばつぐんだ！",msg)
         #相性が悪ければ 0.4~0.6倍のダメージ
         if (Skill["TYPE"] == 1 and to["TYPE"] == 4
         or Skill["TYPE"] == 4 and to["TYPE"] == 3
         or Skill["TYPE"] == 3 and to["TYPE"] == 2
         or Skill["TYPE"] == 2 and to["TYPE"] == 1):
             damage = int(damage * (random.randint(4,6)/10))
-            self.add_log(" こうかはいまひとつのようだ...")
+            self.add_log(" こうかはいまひとつのようだ...",msg)
         return damage
     def get_damage(self,to,damage,msg):
         if damage <= 0: damage = 0
@@ -523,13 +608,12 @@ class Battle(B_Entity,B_Process,B_Utility):
         if to["HP"] <= 0:
             chk = [e for e in to["Effects"] if e["TYPE"] == 11]
             if chk != []:
-                to.HP = 1
+                to["HP"]= 1
             else:
                 self.add_log("%sは倒れた"%(to["Name"]),msg)
                 self.process_field(msg)
                 self.process_check(msg)
-                raise ValueError
-        elif to["HP"] < 5:
+        if to["HP"] < 5:
             chk = [e["TYPE"] for e in to["Effects"] if e["TYPE"] == 12]
             if chk != [12]:
                 to["Effects"].append({"TYPE":12,"Power":100,"Turn":10})
@@ -538,7 +622,7 @@ class Battle(B_Entity,B_Process,B_Utility):
                 self.add_log("%sは瀕死状態になった"%(to["Name"]),msg)
         return to
     #通常攻撃(プレイヤーも敵も通る)
-    def attack(self,_from,to,msg,set_to):
+    def attack(self,_from,to,msg):
         print("Called attack")
         self.add_log("%sの攻撃"%(_from["Name"]),msg)
         self.add_log("<通常> %sの剣"%(_from["Name"]),msg)
@@ -548,6 +632,7 @@ class Battle(B_Entity,B_Process,B_Utility):
     def attack_all(self,_from,toType,msg):
         print("Called attack_all")
         self.add_log("%sの攻撃"%(_from["Name"]),msg)
+        self.add_log("<全体> %sの怒り"%(_from["Name"]),msg)
         battle = self.rpgdata[msg._from]["Stats"]["Battle"]
         for entity in battle["Entities"]:
             entity = battle["Entities"][entity]
@@ -556,38 +641,42 @@ class Battle(B_Entity,B_Process,B_Utility):
                 self.get_damage(entity,damage,msg)
                 #battle["Entities"][self.key_by_num(battle,battle["I_Turn"])] = self.get_damage(entity,damage,msg)
     #効果攻撃(プレイヤーも敵も通る)
-    def effect_attack(self,_from,to,Skill,msg):
-        print("%sの攻撃"%(_from.name))
-        print("<スキル> %s"%(Skill["Name"]))
-        if Skill["TYPE"] not in to.Deny:
+    def effect_attack(self,_from,Skill,to,msg):
+        print("Called effect_attack")
+        self.add_log("%sの攻撃"%(_from["Name"]),msg)
+        self.add_log("<スキル> %s"%(Skill["Name"]),msg)
+        if Skill["TYPE"] not in to["Deny"]:
             if random.randint(1,100) < Skill["HIT"]:
-                data = {"TYPE":Skill["TYPE"],"Turn":Skill["Power"]+2,"Power":Skill["Power"]}
+                if Skill["TYPE"] not in [11]:
+                    data = {"TYPE":Skill["TYPE"],"Turn":Skill["Power"]+2,"Power":Skill["Power"]}
+                else:
+                    data = {"TYPE":Skill["TYPE"],"Turn":1,"Power":Skill["Power"]}
                 to["Effects"].append(data)
-                to = self.entity_reset(to)
-                to = self.effect(to)
-                print("%sは%s状態になった"%(to.name,self.effect_dict[Skill["TYPE"]]))
+                self.reset_entity(to)
+                self.reset_entity_effect(to)
+                self.add_log("%sは%s状態になった"%(to["Name"],self.effect_dict[Skill["TYPE"]]),msg)
             else:
-                print("%sの攻撃は外れた"%(_from.name))
+                self.add_log("%sの攻撃は外れた"%(_from["Name"]),msg)
         else:
-            print("%sには効果がないようだ..."%(to.name))
+            self.add_log("%sには効果がないようだ..."%(to["Name"]),msg)
     def effect_attack_all(self,_from,Skill,toType,msg):
-        print("%sの攻撃"%(_from.name))
-        print("<スキル> %s"%(Skill["Name"]))
-        ens = battle["Entities"]
+        print("Called effect_attack_all")
+        self.add_log("%sの攻撃"%(_from["Name"]),msg)
+        self.add_log("<スキル> %s"%(Skill["Name"]),msg)
+        ens = self.rpgdata[msg._from]["Stats"]["Battle"]["Entities"]
         for en in ens:
             if ens[en]["EType"] == toType:
-                if Skill["TYPE"] not in en["Deny"]:
+                if Skill["TYPE"] not in ens[en]["Deny"]:
                     if random.randint(1,100) < Skill["HIT"]:
                         data = {"TYPE":Skill["TYPE"],"Turn":Skill["Power"]+random.randint(2,4),"Power":Skill["Power"]}
                         ens[en]["Effects"].append(data)
-                        en = self.entity_reset(en)
-                        en = self.effect(en)
-                        print("%sは%s状態になった"%(en["Name"],self.effect_dict[Skill["TYPE"]]))
-                        battle["Entities"][en] = en
+                        self.reset_entity(ens[en])
+                        self.reset_entity_effect(ens[en])
+                        self.add_log("%sは%s状態になった"%(ens[en]["Name"],self.effect_dict[Skill["TYPE"]]),msg)
                     else:
-                        print("%sの攻撃は外れた"%(_from["Name"]))
+                        self.add_log("%sの攻撃は外れた"%(_from["Name"]),msg)
                 else:
-                    print("%sには効果がないようだ..."%(en["Name"]))
+                    self.add_log("%sには効果がないようだ..."%(to["Name"]),msg)
     #魔法攻撃(プレイヤーも敵も通る)
     def magic_attack(self,_from,to,Skill,msg):
         print("Called magic_attack")
@@ -612,7 +701,6 @@ class Battle(B_Entity,B_Process,B_Utility):
                     self.get_damage(entity,damage,battle)
         else:
             self.add_log(" %sの攻撃は外れた"%(_from["Name"]),msg)
-
 '''
 #とりあえず戦闘を直接呼ぶ
 quest = game.quest_dict["デバッグクエスト"]

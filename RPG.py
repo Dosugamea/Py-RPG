@@ -24,6 +24,16 @@ class RPG(Logger,Choicer,Quest,Menu,Battle):
             self.skill_dict = json.loads(f.read(), object_pairs_hook=OrderedDict)
         with open("SaveData.json",encoding="utf-8_sig") as f:
             self.rpgdata = json.loads(f.read(), object_pairs_hook=OrderedDict)
+        self.userdata = {
+            "User":{
+                "State":{
+                    "RPG":{
+                        "Game":True,
+                        "Step":0
+                    }
+                }
+            }
+        }
         print("RPG Created")
     
     '''
@@ -81,7 +91,7 @@ class RPG(Logger,Choicer,Quest,Menu,Battle):
 if __name__ == '__main__': 
     RPGer = RPG()
     RPGer.process_rpg(Message())
-    #RPGer.auto_choice([1,1,1,1,1,1,1,1])
+    RPGer.auto_choice([1,1,1,1,1,1])
     while True:
         inp = input(">>")
         RPGer.process_rpg(Message(text=inp))
