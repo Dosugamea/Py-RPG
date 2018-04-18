@@ -1,0 +1,58 @@
+{
+    "User":{
+        "Name":"Domao",
+        "Stamina": 20,
+        "Stone": 100,
+        "Money": 100,
+        "Pause": false,
+        "Level":5,
+        "Inventory":{},
+        "Items":{},
+        "Skills":{},
+        "Stats":{
+            "Log":[],
+            "Screen":"menu",
+            "Menu":{
+                "MenuID":0,
+                "Quest_MID":0,
+                "Setting_ID":0,
+                "Selecting":false
+            },
+            "Quest":{
+                "Quest_Name":"デバッグクエスト",
+                "Current_Position":0,
+                "Current_Floor":1,
+                "Current_Quest":{},
+                "Current_Got":{},
+                "Questing": true,
+                "Selecting":false
+            },
+            "Battle":{
+                "Log":[],
+                "MenuID":0,
+                "Turn":0,
+                "I_Turn":0,
+                "Got":{},
+                "Entities":{},
+                "Process_Turn":true,
+                "Selecting":false
+            },
+            "Shop":{
+                "ShopID":0,
+                "StepID":0,
+                "Selecting":false,
+                "Current_Shop":{},
+                "ShopName":{
+                    "Bought":{
+                        "0":0,
+                        "1":0
+                    },
+                    "Sold":{
+                        "0":0,
+                        "1":0
+                    }
+                }
+            }
+        }
+    }
+}

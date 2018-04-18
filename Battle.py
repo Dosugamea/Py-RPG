@@ -217,15 +217,9 @@ class B_Utility(object):
     #選択肢一覧を表示する
     def choice_list(self,ls=["A","B","C"],kana=True):
         if kana:
-            kanas = list(self.choice_dict.keys())
-            return ["%s : %s"%(kanas[i],t) for i,t in enumerate(ls)]
+            return ["%s : %s"%(self.kanas[i],t) for i,t in enumerate(ls)]
         else:
             return ["%s : %s"%(i+1,t) for i,t in enumerate(ls)]
-    def key_by_num(self,dict,num):
-        ks = dict.keys()
-        for i,k in enumerate(ks):
-            if i == num: 
-                return k
     #状態異常一覧を返す
     def effect_list(self,entity):
         return [self.effect_dict[e["TYPE"]] for e in entity["Effects"]]
@@ -244,9 +238,10 @@ class B_Utility(object):
             raise ValueError 
 class B_Process(object):
     def process_battle(self,msg):
+        print("Called Battle")
         battle = self.rpgdata[msg._from]["Stats"]["Battle"]
         #戦闘を回すかどうか
-        if battle["Process_Turn"]:
+        if battle["Process_Turn"] and len(battle["Entities"]) > 1:
             #プレイヤーのターンになるまで回す
             while True:
                 flag = self.process_turn(msg)
@@ -258,7 +253,7 @@ class B_Process(object):
             #戦闘回してない
             self.rpgdata[msg._from]["Stats"]["Battle"]["Process_Turn"] = False
         else:
-            if self.userdata[msg._from]["State"]["RPG"]["Game"]:
+            if self.userdata[msg._from]["State"]["RPG"]["Game"] and len(battle["Entities"]) > 1:
                 self.process_player(msg)
     #新規バトルの作成
     def new_battle(self,quest,team,wave,msg):
@@ -271,6 +266,7 @@ class B_Process(object):
         b["Got"] = {1:0,2:0,3:0}
         b["Entities"] = OrderedDict()
         b["Log"] = []
+        self.userdata[msg._from]["State"]["RPG"]["Game"] = True
         i = 1
         for m in quest["Monsters"][str(team)][wave-1]:
             e = self.new_entity(2,m["Name"],m["LV"],drops=m["Drops"])
@@ -354,8 +350,9 @@ class B_Process(object):
                     self.rpgdata[msg._from]["Stats"]["Battle"]["Selecting"] = False
                     self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 0
                     self.attack(battle["Entities"]["p1"],battle["Entities"]["e1"],msg)
-                    self.add_turn(msg,battle)
-                    self.process_battle(msg)
+                    if len(battle["Entities"]) > 1:
+                        self.add_turn(msg,battle)
+                        self.process_battle(msg)
             #魔法
             elif battle["MenuID"] == 1:
                 if msg.text != "も":
@@ -365,8 +362,9 @@ class B_Process(object):
                         self.rpgdata[msg._from]["Stats"]["Battle"]["Selecting"] = False
                         self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 0
                         self.Skill(battle["Entities"]["p1"],choice,msg,self.rpgdata[msg._from]["Stats"]["Battle"]["SelectedSkill"])
-                        self.add_turn(msg,battle)
-                        self.process_battle(msg)
+                        if len(battle["Entities"]) > 1:
+                            self.add_turn(msg,battle)
+                            self.process_battle(msg)
                 else:
                     self.rpgdata[msg._from]["Stats"]["Battle"]["Selecting"] = False
                     self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 0
@@ -392,7 +390,7 @@ class B_Process(object):
                             self.cl.sendMessage("攻撃先は?\n"+"\n".join(self.choice_list([e["Name"] for e in enemys]))+"\n も : 戻る")
                     elif choice == "魔法":
                         self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 1
-                        self.cl.sendMessage("どれを使用しますか?\n"+"\n".join(self.choice_list(["%s MP :%s"%(s,battle["Entities"]["p1"]["Skills"][s]["Cost"]) for s in battle["Entities"]["p1"]["Skills"]]))+"\nも : 戻る")
+                        self.cl.sendMessage("どれを使用しますか?\n"+"\n".join(self.choice_text(["%s MP :%s"%(s,battle["Entities"]["p1"]["Skills"][s]["Cost"]) for s in battle["Entities"]["p1"]["Skills"]]))+"\nも : 戻る")
                     elif choice == "防御":
                         self.defense(msg)
                         self.add_turn(msg,battle)
@@ -509,16 +507,20 @@ class B_Process(object):
     def process_check(self,msg):
         #敵がいなくなったら勝ち
         if len(self.gen_enemys(msg)) == 0:
-            self.add_log("GAME CLEAR",msg)
+            self.add_log("CLEAR",msg)
             self.send_log(msg)
-            msg.text = "中断"
-            self.process_rpg(msg)
+            self.rpgdata[msg._from]["Stats"]["Screen"] = "quest"
+            self.bye_battle(msg)
         #プレイヤーがいなくなったら負け
         elif len(self.gen_players(msg)) == 0:
             self.add_log("GAME OVER",msg)
             self.send_log(msg)
-            msg.text = "中断"
-            self.process_rpg(msg)
+            self.rpgdata[msg._from]["Stats"]["Screen"] = "menu"
+            self.bye_battle(msg)
+    def bye_battle(self,msg):
+        self.rpgdata[msg._from]["Stats"]["Battle"]["Process_Turn"] = False
+        self.userdata[msg._from]["State"]["RPG"]["Game"] = False
+        self.process_quest(msg)
 #戦闘処理
 class Battle(B_Entity,B_Process,B_Utility):
     commands = ["攻撃","魔法","防御","アイテム","逃走"]
@@ -613,7 +615,7 @@ class Battle(B_Entity,B_Process,B_Utility):
                 self.add_log("%sは倒れた"%(to["Name"]),msg)
                 self.process_field(msg)
                 self.process_check(msg)
-        if to["HP"] < 5:
+        if to["HP"] < 5 and to["HP"] > 0:
             chk = [e["TYPE"] for e in to["Effects"] if e["TYPE"] == 12]
             if chk != [12]:
                 to["Effects"].append({"TYPE":12,"Power":100,"Turn":10})

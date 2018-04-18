@@ -5,6 +5,7 @@ from Utility import Client,Message
 from Quest import Quest
 from Menu import Menu
 from Battle import Battle
+import pdb
 
 class RPG(Logger,Choicer,Quest,Menu,Battle):
     cl = Client()
@@ -64,6 +65,7 @@ class RPG(Logger,Choicer,Quest,Menu,Battle):
                         print(self.rpgdata[msg._from]["Stats"]["Screen"])
                         raise ValueError
             else:
+                self.rpgdata[msg._from]["Pause"] = False
                 self.cl.sendMessage("RPGへようこそ🌎")
                 self.process_rpg(msg)
         else:
@@ -88,10 +90,17 @@ class RPG(Logger,Choicer,Quest,Menu,Battle):
                 with open("Terms.txt",encoding="utf-8_sig") as f:
                     self.cl.sendMessage(f.read())
 
+def atend():
+    print("Saving")
+    #with open("SaveData.json","w",encoding='utf8') as f:
+    #    json.dump(RPGer.rpgdata, f, ens1ure_ascii=False, indent=4,separators=(',', ': '))
+    print("BYE")
+atexit.register(atend)
+
 if __name__ == '__main__': 
     RPGer = RPG()
     RPGer.process_rpg(Message())
-    RPGer.auto_choice([1,1,1,1,1,1])
+    RPGer.auto_choice([1,1,1,1,1,1,1,1,1])
     while True:
         inp = input(">>")
         RPGer.process_rpg(Message(text=inp))

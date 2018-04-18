@@ -1,5 +1,6 @@
 ﻿import json,random
 from datetime import datetime
+from collections import OrderedDict
 
 '''
     クエスト名:
@@ -79,7 +80,13 @@ class Q_Utility(object):
         stat["Current_Quest"] = self.questdata[stat["Quest_Name"]]
         stat["Current_Position"] = random.choice(self.questdata[stat["Quest_Name"]]["Start"]) -1
         stat["Current_Floor"] = 0
-        stat["Player"] = self.new_entity(1,mid=msg._from)
+        pdata = self.new_entity(1,mid=msg._from)
+        stat["Player"] = OrderedDict()
+        stat["Player"]["HP"] = pdata["HP"]
+        stat["Player"]["MAX_HP"] = pdata["MAX_HP"]
+        stat["Player"]["MP"] = pdata["MP"]
+        stat["Player"]["MAX_MP"] = pdata["MAX_MP"]
+        stat["Player"]["Name"] = pdata["Name"]
         self.rpgdata[msg._from]["Stamina"] -= stat["Current_Quest"]["Stamina"]
         self.add_log("<<< %s に出発します >>>\n"%(stat["Quest_Name"]),msg)
         self.process_go(msg)
@@ -135,7 +142,7 @@ class Q_Process(object):
             self.process_go(msg)
         elif data["Type"] not in [8,9,5]:
             self.log_q_status(msg)
-        if data["Type"] != 5:
+        if data["Type"] not in [5] and stat["Questing"]:
             self.send_log(msg)
     
     #コマンド:休む
@@ -206,7 +213,7 @@ class Q_Process(object):
                 if per <= data["Param"][1]:
                     self.Get_Item(data["Param"][0],msg)
                 else:
-                    self.add_log("中身は空だった...")
+                    self.add_log("中身は空だった...",msg)
             else:
                 per = random.randint(1,100)
                 if per <= data["Param"][1]:
@@ -215,7 +222,7 @@ class Q_Process(object):
                     self.add_log("!? これは宝箱じゃないぞ!",msg)
                     self.Battle(random.choice(data["Param"][2]))
         else:
-            self.add_log("罠かもしれない。 開けないことにした...")
+            self.add_log("罠かもしれない。 開けないことにした...",msg)
         self.rpgdata[msg._from]["Stats"]["Quest"]["Selecting"] = False
         self.process_go(msg)
         
@@ -281,6 +288,14 @@ class Q_Process(object):
             self.add_log(" 撤退",msg)
             self.add_log("[報酬]",msg)
             self.add_log("　なし",msg)
+        self.send_log(msg)
+        self.rpgdata[msg._from]["Stats"]["Screen"] = "menu"
+        self.rpgdata[msg._from]["Stats"]["Menu"]["MenuID"] = 0
+        self.rpgdata[msg._from]["Stats"]["Menu"]["Quest_MID"] = 0
+        self.rpgdata[msg._from]["Stats"]["Menu"]["Setting_ID"] = 0
+        self.rpgdata[msg._from]["Stats"]["Menu"]["Selecting"] = False
+        self.rpgdata[msg._from]["Stats"]["Menu"]["Selecting"] = False
+        self.process_rpg(msg)
 
 class Quest(Q_Process,Q_Utility):
     def process_quest(self,msg):
