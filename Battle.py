@@ -255,6 +255,11 @@ class B_Process(object):
         else:
             if self.userdata[msg._from]["State"]["RPG"]["Game"] and len(battle["Entities"]) > 1:
                 self.process_player(msg)
+    def key_by_num(self,dict,num):
+             ks = dict.keys()
+             for i,k in enumerate(ks):
+                 if i == num: 
+                     return k
     #新規バトルの作成
     def new_battle(self,quest,team,wave,msg):
         b = OrderedDict()
