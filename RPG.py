@@ -100,7 +100,7 @@ atexit.register(atend)
 if __name__ == '__main__': 
     RPGer = RPG()
     RPGer.process_rpg(Message())
-    RPGer.auto_choice([1,1,1,1,1,1,1,1,1])
+    #RPGer.auto_choice([1,1,1,1,1,1,1,1,1])
     while True:
         inp = input(">>")
         RPGer.process_rpg(Message(text=inp))

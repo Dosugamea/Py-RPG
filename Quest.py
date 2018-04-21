@@ -149,6 +149,7 @@ class Q_Process(object):
     def process_rest(self,msg):
         stat = self.rpgdata[msg._from]["Stats"]["Quest"]
         
+        
     def Damage(self,data,msg):
         stat = self.rpgdata[msg._from]["Stats"]["Quest"]
         '''
