@@ -247,7 +247,7 @@ class B_Process(object):
                 flag = self.process_turn(msg)
                 if flag: break
             if self.userdata[msg._from]["State"]["RPG"]["Game"]:
-                #プレイヤーのターンが回ってきたら表示する
+                #プレイヤーターンが回ってきたら表示する
                 self.log_status(msg)
                 self.send_log(msg)
             #戦闘回してない
