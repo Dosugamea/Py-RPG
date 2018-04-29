@@ -1,5 +1,6 @@
 ﻿import json,random
 from datetime import datetime
+from copy import deepcopy
 from collections import OrderedDict
 
 '''
@@ -273,14 +274,35 @@ class Q_Process(object):
         self.rpgdata[msg._from]["Stats"]["Quest"]["Questing"] = False
         self.End_Quest("Goal",msg)
     
+    def level_calc(self,exp,msg):
+        data = self.rpgdata[msg._from]
+        data["EXP"] += exp
+        old_lv = deepcopy(self.rpgdata[msg._from]["Level"])
+        ret = False
+        while True:
+            if data["EXP"] >= self.leveldata[str(data["Level"]+1)]["EXP"]:
+                data["Level"] += 1
+                ret = True
+            else:
+                break
+        return ret,old_lv
+    
     def End_Quest(self,result,msg):
         data = self.rpgdata[msg._from]["Stats"]["Quest"]
+        gexp = random.choice(data["Current_Quest"]["Exp"][result])
         self.add_log("<リザルト>",msg)
         self.add_log("\n[ランク]",msg)
         if result == "Goal":
             self.add_log("　　クリア",msg)
             self.add_log("[報酬]",msg)
-            self.add_log("　コイン x 1000",msg)
+            if "Reward" in data["Current_Quest"]:
+                rw = self.iper2igot(data["Current_Quest"]["Reward"])
+                if len(rw) == 0:self.add_log("　なし",msg)
+                else:
+                    self.igot2data(rw,msg)
+                    self.add_log(self.igot2itext(rw),msg)
+            else:
+                self.add_log("　なし",msg)
         elif result == "Stop":
             self.add_log(" 帰還",msg)
             self.add_log("[報酬]",msg)
@@ -289,7 +311,14 @@ class Q_Process(object):
             self.add_log(" 撤退",msg)
             self.add_log("[報酬]",msg)
             self.add_log("　なし",msg)
+        lvup = self.level_calc(gexp,msg)
+        self.add_log("[経験値]",msg)
+        self.add_log(" +%s"%(gexp),msg)
         self.send_log(msg)
+        if lvup[0]:
+            self.add_log("<レベルアップ>",msg)
+            self.add_log(" %s -> %s"%(lvup[1],self.rpgdata[msg._from]["Level"]),msg)
+            self.send_log(msg)
         self.rpgdata[msg._from]["Stats"]["Screen"] = "menu"
         self.rpgdata[msg._from]["Stats"]["Menu"]["MenuID"] = 0
         self.rpgdata[msg._from]["Stats"]["Menu"]["Quest_MID"] = 0

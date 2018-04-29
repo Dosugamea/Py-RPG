@@ -1,0 +1,702 @@
+{
+    "1": {
+        "EXP": 30,
+        "Stamina": 10,
+        "Friend": 20,
+        "Cost": 50,
+        "Weapon": 20
+    },
+    "2": {
+        "EXP": 90,
+        "Stamina": 12,
+        "Friend": 21,
+        "Cost": 52,
+        "Weapon": 20
+    },
+    "3": {
+        "EXP": 180,
+        "Stamina": 14,
+        "Friend": 22,
+        "Cost": 53,
+        "Weapon": 20
+    },
+    "4": {
+        "EXP": 320,
+        "Stamina": 16,
+        "Friend": 23,
+        "Cost": 54,
+        "Weapon": 20
+    },
+    "5": {
+        "EXP": 530,
+        "Stamina": 18,
+        "Friend": 24,
+        "Cost": 55,
+        "Weapon": 20
+    },
+    "6": {
+        "EXP": 850,
+        "Stamina": 20,
+        "Friend": 25,
+        "Cost": 56,
+        "Weapon": 21
+    },
+    "7": {
+        "EXP": 1330,
+        "Stamina": 22,
+        "Friend": 26,
+        "Cost": 57,
+        "Weapon": 21
+    },
+    "8": {
+        "EXP": 2050,
+        "Stamina": 24,
+        "Friend": 27,
+        "Cost": 58,
+        "Weapon": 21
+    },
+    "9": {
+        "EXP": 3130,
+        "Stamina": 26,
+        "Friend": 28,
+        "Cost": 59,
+        "Weapon": 21
+    },
+    "10": {
+        "EXP": 4750,
+        "Stamina": 29,
+        "Friend": 29,
+        "Cost": 60,
+        "Weapon": 21
+    },
+    "11": {
+        "EXP": 6540,
+        "Stamina": 31,
+        "Friend": 30,
+        "Cost": 61,
+        "Weapon": 22
+    },
+    "12": {
+        "EXP": 9230,
+        "Stamina": 33,
+        "Friend": 31,
+        "Cost": 62,
+        "Weapon": 22
+    },
+    "13": {
+        "EXP": 12190,
+        "Stamina": 35,
+        "Friend": 32,
+        "Cost": 63,
+        "Weapon": 22
+    },
+    "14": {
+        "EXP": 16040,
+        "Stamina": 37,
+        "Friend": 33,
+        "Cost": 64,
+        "Weapon": 22
+    },
+    "15": {
+        "EXP": 20090,
+        "Stamina": 39,
+        "Friend": 34,
+        "Cost": 65,
+        "Weapon": 22
+    },
+    "16": {
+        "EXP": 24350,
+        "Stamina": 40,
+        "Friend": 35,
+        "Cost": 66,
+        "Weapon": 23
+    },
+    "17": {
+        "EXP": 28830,
+        "Stamina": 41,
+        "Friend": 36,
+        "Cost": 67,
+        "Weapon": 23
+    },
+    "18": {
+        "EXP": 33540,
+        "Stamina": 42,
+        "Friend": 37,
+        "Cost": 68,
+        "Weapon": 23
+    },
+    "19": {
+        "EXP": 38490,
+        "Stamina": 43,
+        "Friend": 38,
+        "Cost": 69,
+        "Weapon": 23
+    },
+    "20": {
+        "EXP": 43690,
+        "Stamina": 45,
+        "Friend": 39,
+        "Cost": 70,
+        "Weapon": 23
+    },
+    "21": {
+        "EXP": 49150,
+        "Stamina": 46,
+        "Friend": 40,
+        "Cost": 71,
+        "Weapon": 24
+    },
+    "22": {
+        "EXP": 54890,
+        "Stamina": 47,
+        "Friend": 41,
+        "Cost": 72,
+        "Weapon": 24
+    },
+    "23": {
+        "EXP": 60920,
+        "Stamina": 48,
+        "Friend": 42,
+        "Cost": 73,
+        "Weapon": 24
+    },
+    "24": {
+        "EXP": 67260,
+        "Stamina": 49,
+        "Friend": 43,
+        "Cost": 74,
+        "Weapon": 24
+    },
+    "25": {
+        "EXP": 73920,
+        "Stamina": 50,
+        "Friend": 44,
+        "Cost": 75,
+        "Weapon": 24
+    },
+    "26": {
+        "EXP": 80920,
+        "Stamina": 51,
+        "Friend": 45,
+        "Cost": 76,
+        "Weapon": 25
+    },
+    "27": {
+        "EXP": 88270,
+        "Stamina": 52,
+        "Friend": 46,
+        "Cost": 77,
+        "Weapon": 25
+    },
+    "28": {
+        "EXP": 95990,
+        "Stamina": 53,
+        "Friend": 47,
+        "Cost": 78,
+        "Weapon": 25
+    },
+    "29": {
+        "EXP": 104100,
+        "Stamina": 54,
+        "Friend": 48,
+        "Cost": 79,
+        "Weapon": 25
+    },
+    "30": {
+        "EXP": 113030,
+        "Stamina": 55,
+        "Friend": 49,
+        "Cost": 80,
+        "Weapon": 25
+    },
+    "31": {
+        "EXP": 122410,
+        "Stamina": 56,
+        "Friend": 50,
+        "Cost": 80,
+        "Weapon": 26
+    },
+    "32": {
+        "EXP": 132260,
+        "Stamina": 57,
+        "Friend": 51,
+        "Cost": 81,
+        "Weapon": 26
+    },
+    "33": {
+        "EXP": 143100,
+        "Stamina": 58,
+        "Friend": 52,
+        "Cost": 81,
+        "Weapon": 26
+    },
+    "34": {
+        "EXP": 154490,
+        "Stamina": 59,
+        "Friend": 53,
+        "Cost": 82,
+        "Weapon": 26
+    },
+    "35": {
+        "EXP": 166450,
+        "Stamina": 60,
+        "Friend": 54,
+        "Cost": 82,
+        "Weapon": 26
+    },
+    "36": {
+        "EXP": 179610,
+        "Stamina": 61,
+        "Friend": 55,
+        "Cost": 83,
+        "Weapon": 27
+    },
+    "37": {
+        "EXP": 193430,
+        "Stamina": 62,
+        "Friend": 56,
+        "Cost": 83,
+        "Weapon": 27
+    },
+    "38": {
+        "EXP": 207950,
+        "Stamina": 63,
+        "Friend": 57,
+        "Cost": 84,
+        "Weapon": 27
+    },
+    "39": {
+        "EXP": 223930,
+        "Stamina": 64,
+        "Friend": 58,
+        "Cost": 84,
+        "Weapon": 27
+    },
+    "40": {
+        "EXP": 240710,
+        "Stamina": 65,
+        "Friend": 59,
+        "Cost": 85,
+        "Weapon": 27
+    },
+    "41": {
+        "EXP": 258330,
+        "Stamina": 66,
+        "Friend": 60,
+        "Cost": 85,
+        "Weapon": 28
+    },
+    "42": {
+        "EXP": 277720,
+        "Stamina": 67,
+        "Friend": 61,
+        "Cost": 86,
+        "Weapon": 28
+    },
+    "43": {
+        "EXP": 298080,
+        "Stamina": 68,
+        "Friend": 62,
+        "Cost": 86,
+        "Weapon": 28
+    },
+    "44": {
+        "EXP": 319460,
+        "Stamina": 69,
+        "Friend": 63,
+        "Cost": 87,
+        "Weapon": 28
+    },
+    "45": {
+        "EXP": 342980,
+        "Stamina": 70,
+        "Friend": 64,
+        "Cost": 87,
+        "Weapon": 28
+    },
+    "46": {
+        "EXP": 367680,
+        "Stamina": 71,
+        "Friend": 65,
+        "Cost": 88,
+        "Weapon": 29
+    },
+    "47": {
+        "EXP": 393620,
+        "Stamina": 72,
+        "Friend": 66,
+        "Cost": 88,
+        "Weapon": 29
+    },
+    "48": {
+        "EXP": 422160,
+        "Stamina": 73,
+        "Friend": 67,
+        "Cost": 89,
+        "Weapon": 29
+    },
+    "49": {
+        "EXP": 452130,
+        "Stamina": 74,
+        "Friend": 68,
+        "Cost": 89,
+        "Weapon": 29
+    },
+    "50": {
+        "EXP": 485100,
+        "Stamina": 75,
+        "Friend": 69,
+        "Cost": 90,
+        "Weapon": 29
+    },
+    "51": {
+        "EXP": 519720,
+        "Stamina": 76,
+        "Friend": 70,
+        "Cost": 90,
+        "Weapon": 30
+    },
+    "52": {
+        "EXP": 557810,
+        "Stamina": 77,
+        "Friend": 71,
+        "Cost": 91,
+        "Weapon": 30
+    },
+    "53": {
+        "EXP": 597810,
+        "Stamina": 78,
+        "Friend": 72,
+        "Cost": 91,
+        "Weapon": 30
+    },
+    "54": {
+        "EXP": 641810,
+        "Stamina": 79,
+        "Friend": 73,
+        "Cost": 92,
+        "Weapon": 30
+    },
+    "55": {
+        "EXP": 688010,
+        "Stamina": 80,
+        "Friend": 74,
+        "Cost": 92,
+        "Weapon": 30
+    },
+    "56": {
+        "EXP": 738830,
+        "Stamina": 81,
+        "Friend": 75,
+        "Cost": 93,
+        "Weapon": 30
+    },
+    "57": {
+        "EXP": 792200,
+        "Stamina": 82,
+        "Friend": 76,
+        "Cost": 93,
+        "Weapon": 30
+    },
+    "58": {
+        "EXP": 850910,
+        "Stamina": 83,
+        "Friend": 77,
+        "Cost": 94,
+        "Weapon": 30
+    },
+    "59": {
+        "EXP": 912560,
+        "Stamina": 84,
+        "Friend": 78,
+        "Cost": 94,
+        "Weapon": 30
+    },
+    "60": {
+        "EXP": 980380,
+        "Stamina": 85,
+        "Friend": 79,
+        "Cost": 95,
+        "Weapon": 30
+    },
+    "61": {
+        "EXP": 1051600,
+        "Stamina": 86,
+        "Friend": 80,
+        "Cost": 95,
+        "Weapon": 31
+    },
+    "62": {
+        "EXP": 1129950,
+        "Stamina": 87,
+        "Friend": 81,
+        "Cost": 96,
+        "Weapon": 31
+    },
+    "63": {
+        "EXP": 1212220,
+        "Stamina": 88,
+        "Friend": 82,
+        "Cost": 96,
+        "Weapon": 31
+    },
+    "64": {
+        "EXP": 1302720,
+        "Stamina": 89,
+        "Friend": 83,
+        "Cost": 97,
+        "Weapon": 31
+    },
+    "65": {
+        "EXP": 1397750,
+        "Stamina": 90,
+        "Friend": 84,
+        "Cost": 97,
+        "Weapon": 31
+    },
+    "66": {
+        "EXP": 1502290,
+        "Stamina": 91,
+        "Friend": 85,
+        "Cost": 98,
+        "Weapon": 31
+    },
+    "67": {
+        "EXP": 1612060,
+        "Stamina": 92,
+        "Friend": 86,
+        "Cost": 98,
+        "Weapon": 31
+    },
+    "68": {
+        "EXP": 1732810,
+        "Stamina": 93,
+        "Friend": 87,
+        "Cost": 99,
+        "Weapon": 31
+    },
+    "69": {
+        "EXP": 1865640,
+        "Stamina": 94,
+        "Friend": 88,
+        "Cost": 99,
+        "Weapon": 31
+    },
+    "70": {
+        "EXP": 2011760,
+        "Stamina": 95,
+        "Friend": 89,
+        "Cost": 100,
+        "Weapon": 31
+    },
+    "71": {
+        "EXP": 2172500,
+        "Stamina": 96,
+        "Friend": 90,
+        "Cost": 100,
+        "Weapon": 32
+    },
+    "72": {
+        "EXP": 2349320,
+        "Stamina": 97,
+        "Friend": 91,
+        "Cost": 101,
+        "Weapon": 32
+    },
+    "73": {
+        "EXP": 2543830,
+        "Stamina": 98,
+        "Friend": 92,
+        "Cost": 101,
+        "Weapon": 32
+    },
+    "74": {
+        "EXP": 2757800,
+        "Stamina": 99,
+        "Friend": 93,
+        "Cost": 102,
+        "Weapon": 32
+    },
+    "75": {
+        "EXP": 2993170,
+        "Stamina": 100,
+        "Friend": 94,
+        "Cost": 102,
+        "Weapon": 32
+    },
+    "76": {
+        "EXP": 3252080,
+        "Stamina": 101,
+        "Friend": 95,
+        "Cost": 103,
+        "Weapon": 32
+    },
+    "77": {
+        "EXP": 3536890,
+        "Stamina": 102,
+        "Friend": 96,
+        "Cost": 103,
+        "Weapon": 32
+    },
+    "78": {
+        "EXP": 3850190,
+        "Stamina": 103,
+        "Friend": 97,
+        "Cost": 104,
+        "Weapon": 32
+    },
+    "79": {
+        "EXP": 4226150,
+        "Stamina": 104,
+        "Friend": 98,
+        "Cost": 104,
+        "Weapon": 32
+    },
+    "80": {
+        "EXP": 4639710,
+        "Stamina": 105,
+        "Friend": 99,
+        "Cost": 105,
+        "Weapon": 32
+    },
+    "81": {
+        "EXP": 5094630,
+        "Stamina": 106,
+        "Friend": 100,
+        "Cost": 105,
+        "Weapon": 33
+    },
+    "82": {
+        "EXP": 5640540,
+        "Stamina": 107,
+        "Friend": 100,
+        "Cost": 106,
+        "Weapon": 33
+    },
+    "83": {
+        "EXP": 6241050,
+        "Stamina": 108,
+        "Friend": 100,
+        "Cost": 106,
+        "Weapon": 33
+    },
+    "84": {
+        "EXP": 6901620,
+        "Stamina": 109,
+        "Friend": 100,
+        "Cost": 107,
+        "Weapon": 33
+    },
+    "85": {
+        "EXP": 7694310,
+        "Stamina": 110,
+        "Friend": 100,
+        "Cost": 107,
+        "Weapon": 33
+    },
+    "86": {
+        "EXP": 8566270,
+        "Stamina": 111,
+        "Friend": 100,
+        "Cost": 108,
+        "Weapon": 33
+    },
+    "87": {
+        "EXP": 9525430,
+        "Stamina": 112,
+        "Friend": 100,
+        "Cost": 108,
+        "Weapon": 33
+    },
+    "88": {
+        "EXP": 10676430,
+        "Stamina": 113,
+        "Friend": 100,
+        "Cost": 109,
+        "Weapon": 33
+    },
+    "89": {
+        "EXP": 11942530,
+        "Stamina": 114,
+        "Friend": 100,
+        "Cost": 109,
+        "Weapon": 33
+    },
+    "90": {
+        "EXP": 13335240,
+        "Stamina": 115,
+        "Friend": 100,
+        "Cost": 110,
+        "Weapon": 33
+    },
+    "91": {
+        "EXP": 15006500,
+        "Stamina": 116,
+        "Friend": 100,
+        "Cost": 110,
+        "Weapon": 34
+    },
+    "92": {
+        "EXP": 16844890,
+        "Stamina": 117,
+        "Friend": 100,
+        "Cost": 111,
+        "Weapon": 34
+    },
+    "93": {
+        "EXP": 19050960,
+        "Stamina": 118,
+        "Friend": 100,
+        "Cost": 111,
+        "Weapon": 34
+    },
+    "94": {
+        "EXP": 21477640,
+        "Stamina": 119,
+        "Friend": 100,
+        "Cost": 112,
+        "Weapon": 34
+    },
+    "95": {
+        "EXP": 24389660,
+        "Stamina": 120,
+        "Friend": 100,
+        "Cost": 112,
+        "Weapon": 34
+    },
+    "96": {
+        "EXP": 27592890,
+        "Stamina": 121,
+        "Friend": 100,
+        "Cost": 113,
+        "Weapon": 34
+    },
+    "97": {
+        "EXP": 31436770,
+        "Stamina": 122,
+        "Friend": 100,
+        "Cost": 113,
+        "Weapon": 34
+    },
+    "98": {
+        "EXP": 35665040,
+        "Stamina": 123,
+        "Friend": 100,
+        "Cost": 114,
+        "Weapon": 34
+    },
+    "99": {
+        "EXP": 40738970,
+        "Stamina": 124,
+        "Friend": 100,
+        "Cost": 114,
+        "Weapon": 34
+    },
+    "100": {
+        "EXP": 40738970,
+        "Stamina": 125,
+        "Friend": 100,
+        "Cost": 115,
+        "Weapon": 34
+    }
+}

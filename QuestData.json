@@ -2,6 +2,14 @@
     "デバッグクエスト":{
         "Stamina":0,
         "Random": 0,
+        "Reward":[
+            {"ITEM_ID":0,"COUNT":1000,"PERCENT":100}
+        ],
+        "Exp":{
+            "Goal":[1000,1500],
+            "Stop":[10,40],
+            "Dead":[0,0]
+        },
         "Waves": [6],
         "Start": [1],
         "Map":[

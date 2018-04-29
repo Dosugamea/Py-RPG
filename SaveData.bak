@@ -12,6 +12,10 @@
         "Stats":{
             "Log":[],
             "Screen":"menu",
+			"Gacha":{
+				"Gacha_Name":"デバッグガチャ",
+				"Selecting":false
+			},
             "Menu":{
                 "MenuID":0,
                 "Quest_MID":0,
@@ -28,7 +32,6 @@
                 "Selecting":false
             },
             "Battle":{
-                "Log":[],
                 "MenuID":0,
                 "Turn":0,
                 "I_Turn":0,

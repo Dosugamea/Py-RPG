@@ -4,13 +4,17 @@ from Utility import Logger,Choicer
 from Utility import Client,Message
 from Quest import Quest
 from Menu import Menu
+from Item import Item
 from Battle import Battle
+from Secret import Secret
 import pdb
 
-class RPG(Logger,Choicer,Quest,Menu,Battle):
+class RPG(Logger,Choicer,Quest,Menu,Battle,Item,Secret):
     cl = Client()
 
     def __init__(self):
+        with open("LevelData.json",encoding="utf-8_sig") as f:
+            self.leveldata = json.loads(f.read(), object_pairs_hook=OrderedDict)
         with open("ShopData.json",encoding="utf-8_sig") as f:
             self.shopdata = json.loads(f.read(), object_pairs_hook=OrderedDict)
         with open("ItemData.json",encoding="utf-8_sig") as f:
@@ -74,21 +78,21 @@ class RPG(Logger,Choicer,Quest,Menu,Battle):
 
     def process_gate(self,msg):
         if self.userdata[msg._from]["State"]["RPG"]["Step"] == 0:
-            self.cl.sendMessage('アカウントがないみたいです!\n新規登録しても大丈夫でしょうか？\n\n"はい"で登録\n"いいえ"でキャンセルします\n※登録した時点で利用規約に同意したとみなします\n利用規約は"利用規約"で確認できます')
+            self.cl.sendMessage(msg.to,'アカウントがないみたいです!\n新規登録しても大丈夫でしょうか？\n\n"はい"で登録\n"いいえ"でキャンセルします\n※登録した時点で利用規約に同意したとみなします\n利用規約は"利用規約"で確認できます')
             self.userdata[msg._from]["State"]["RPG"]["Step"] += 1
         else:
             if msg.text == "はい":
                 self.userdata[msg._from]["State"]["RPG"]["Step"] = 2
-                self.cl.sendMessage("ありがとうございます！\nユーザー情報を登録します...")
+                self.cl.sendMessage(msg.to,"ありがとうございます！\nユーザー情報を登録します...")
                 self.register_rpg(msg)
-                self.cl.sendMessage("登録しました！\nようこそ RPGへ!")
+                self.cl.sendMessage(msg.to,"登録しました！\nようこそ RPGへ!")
             elif msg.text == "いいえ":
                 self.userdata[msg._from]["State"]["RPG"]["Step"] = 0
                 self.userdata[msg._from]["State"]["RPG"]["Game"] = False
-                self.cl.sendMessage("気が変わったらまた来てください > <")
+                self.cl.sendMessage(msg.to,"気が変わったらまた来てください > <")
             elif msg.text == "利用規約":
                 with open("Terms.txt",encoding="utf-8_sig") as f:
-                    self.cl.sendMessage(f.read())
+                    self.cl.sendMessage(msg.to,f.read())
 
 def atend():
     print("Saving")
@@ -100,7 +104,7 @@ atexit.register(atend)
 if __name__ == '__main__': 
     RPGer = RPG()
     RPGer.process_rpg(Message())
-    #RPGer.auto_choice([1,1,1,1,1,1,1,1,1])
+    RPGer.auto_choice([1,1,1,1,1,1,1,1,1,1,1,1,1])
     while True:
         inp = input(">>")
         RPGer.process_rpg(Message(text=inp))

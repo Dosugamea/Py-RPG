@@ -2,6 +2,7 @@
     "User":{
         "Name":"Domao",
         "Stamina": 20,
+        "EXP":0,
         "Stone": 100,
         "Money": 100,
         "Pause": false,

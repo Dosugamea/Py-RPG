@@ -6,6 +6,7 @@ import json,random
 class B_Entity(object):
     #新規Entityの作成
     def new_entity(self,type=0,name="NicoNico",level=1,drops=[],mid=None):
+        print("NEW_ENTITY")
         #敵型
         if type == 2:
             if name in self.enemy_dict:
@@ -52,6 +53,7 @@ class B_Entity(object):
             e["EType"] = 1
             data = self.rpgdata[mid]
             lv = data["Level"]
+            e["LV"] = data["Level"]
             e["Name"] = data["Name"]
             e["HP"] = e["MAX_HP"] =  int(50 + lv*0.75)
             e["MP"] = e["MAX_MP"] =  int(30 + lv*0.5)
@@ -60,6 +62,7 @@ class B_Entity(object):
             e["SPD"] = int(20 + lv*0.1)
             self.rpgdata[mid]["Skills"] = deepcopy(self.skill_dict)
             e["Skills"] = self.rpgdata[mid]["Skills"]
+            print(e)
             #e["Deny"] = RPG.rpgdata[mid]["Deny"]
         return e
     #エンティティにIDを付け直す
@@ -246,14 +249,14 @@ class B_Process(object):
             while True:
                 flag = self.process_turn(msg)
                 if flag: break
-            if self.userdata[msg._from]["State"]["RPG"]["Game"]:
+            if self.rpgdata[msg._from]["Stats"]["InBattle"]:
                 #プレイヤーターンが回ってきたら表示する
                 self.log_status(msg)
                 self.send_log(msg)
             #戦闘回してない
             self.rpgdata[msg._from]["Stats"]["Battle"]["Process_Turn"] = False
         else:
-            if self.userdata[msg._from]["State"]["RPG"]["Game"] and len(battle["Entities"]) > 1:
+            if self.rpgdata[msg._from]["Stats"]["InBattle"] and len(battle["Entities"]) > 1:
                 self.process_player(msg)
     def key_by_num(self,dict,num):
              ks = dict.keys()
@@ -271,7 +274,7 @@ class B_Process(object):
         b["Got"] = {1:0,2:0,3:0}
         b["Entities"] = OrderedDict()
         b["Log"] = []
-        self.userdata[msg._from]["State"]["RPG"]["Game"] = True
+        self.rpgdata[msg._from]["Stats"]["InBattle"] = True
         i = 1
         for m in quest["Monsters"][str(team)][wave-1]:
             e = self.new_entity(2,m["Name"],m["LV"],drops=m["Drops"])
@@ -302,7 +305,7 @@ class B_Process(object):
     def process_turn(self,msg):
         print("Called Process_Turn")
         battle = self.rpgdata[msg._from]["Stats"]["Battle"]
-        if self.userdata[msg._from]["State"]["RPG"]["Game"]:
+        if self.rpgdata[msg._from]["Stats"]["InBattle"]:
             entity = battle["Entities"][self.key_by_num(battle["Entities"],battle["I_Turn"])]
             if entity["EType"] == 2:
                 entity = self.process_enemy(entity,msg)
@@ -395,7 +398,7 @@ class B_Process(object):
                             self.cl.sendMessage("攻撃先は?\n"+"\n".join(self.choice_list([e["Name"] for e in enemys]))+"\n も : 戻る")
                     elif choice == "魔法":
                         self.rpgdata[msg._from]["Stats"]["Battle"]["MenuID"] = 1
-                        self.cl.sendMessage("どれを使用しますか?\n"+"\n".join(self.choice_text(["%s MP :%s"%(s,battle["Entities"]["p1"]["Skills"][s]["Cost"]) for s in battle["Entities"]["p1"]["Skills"]]))+"\nも : 戻る")
+                        self.cl.sendMessage(msg.to,"どれを使用しますか?\n"+"\n".join(self.choice_text(["%s MP :%s"%(s,battle["Entities"]["p1"]["Skills"][s]["Cost"]) for s in battle["Entities"]["p1"]["Skills"]]))+"\nも : 戻る")
                     elif choice == "防御":
                         self.defense(msg)
                         self.add_turn(msg,battle)
@@ -524,7 +527,7 @@ class B_Process(object):
             self.bye_battle(msg)
     def bye_battle(self,msg):
         self.rpgdata[msg._from]["Stats"]["Battle"]["Process_Turn"] = False
-        self.userdata[msg._from]["State"]["RPG"]["Game"] = False
+        self.rpgdata[msg._from]["Stats"]["InBattle"] = False
         self.process_quest(msg)
 #戦闘処理
 class Battle(B_Entity,B_Process,B_Utility):

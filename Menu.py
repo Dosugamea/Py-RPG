@@ -10,7 +10,18 @@ class M_Process(object):
         2:["Quest1","Quest2","Quest3","戻る"],
         3:["Quest1","Quest2","Quest3","戻る"]
     }
-    yobi = ["月","火","水","木","金","土","日"]        
+    yobi = ["月","火","水","木","金","土","日"]
+
+    #ユーザーファイルからテキストを作る
+    def make_stat_user(self,msg):
+        ls = []
+        ls.append("Lv%s %s"%(self.rpgdata[msg._from]["Level"],self.rpgdata[msg._from]["Name"]))
+        ls.append("Level: %s"%(self.rpgdata[msg._from]["Level"]))
+        ls.append("ToNext: %s"%(self.leveldata[str(self.rpgdata[msg._from]["Level"]+1)]["EXP"]-self.rpgdata[msg._from]["EXP"]))
+        ls.append("Stamina: %s"%(self.rpgdata[msg._from]["Stamina"]))
+        ls.append("Coin: %s"%(self.rpgdata[msg._from]["Money"]))
+        ls.append("Stone: %s"%(self.rpgdata[msg._from]["Stone"]))
+        return ls
     
     #曜日指定、期間指定でショップを作る
     def gen_global_shop(self):
@@ -80,6 +91,7 @@ class Menu(M_Process):
         if stat["Selecting"] == False:
             #表示するだけー
             if stat["MenuID"] == 0:
+                self.add_log(str(self.make_stat_user(msg)),msg)
                 self.add_log("[ホーム]\nどこに行きますか?",msg)
                 self.add_log(self.combine(self.choice_text(["クエスト","バイト","ショップ","設定"])),msg)
             elif stat["MenuID"] == 1:
