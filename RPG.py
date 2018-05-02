@@ -1,15 +1,15 @@
 import json,random,atexit
 from collections import OrderedDict
-from Utility import Logger,Choicer
-from Utility import Client,Message
+from Utility import Logger,Choicer,Client,Message
 from Quest import Quest
 from Menu import Menu
 from Item import Item
+from Stamina import Stamina
 from Battle import Battle
 from Secret import Secret
-import pdb
+#import pdb
 
-class RPG(Logger,Choicer,Quest,Menu,Battle,Item,Secret):
+class RPG(Logger,Choicer,Quest,Menu,Battle,Item,Secret,Stamina):
     cl = Client()
 
     def __init__(self):
@@ -73,7 +73,7 @@ class RPG(Logger,Choicer,Quest,Menu,Battle,Item,Secret):
                 self.cl.sendMessage("RPGへようこそ🌎")
                 self.process_rpg(msg)
         else:
-            self.cl.sendMessage("RPGへようこそ🌎")
+            #self.cl.sendMessage("RPGへようこそ🌎")
             self.process_gate(msg)
 
     def process_gate(self,msg):
@@ -104,7 +104,7 @@ atexit.register(atend)
 if __name__ == '__main__': 
     RPGer = RPG()
     RPGer.process_rpg(Message())
-    RPGer.auto_choice([1,1,1,1,1,1,1,1,1,1,1,1,1])
+    #RPGer.auto_choice([1,1,1,1,1,1,1,1,1,1,1,1,1])
     while True:
         inp = input(">>")
         RPGer.process_rpg(Message(text=inp))

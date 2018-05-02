@@ -93,7 +93,7 @@ class Menu(M_Process):
             if stat["MenuID"] == 0:
                 self.add_log(str(self.make_stat_user(msg)),msg)
                 self.add_log("[ホーム]\nどこに行きますか?",msg)
-                self.add_log(self.combine(self.choice_text(["クエスト","バイト","ショップ","設定"])),msg)
+                self.add_log(self.combine(self.choice_text(["クエスト","バイト","ショップ","設定","中断"])),msg)
             elif stat["MenuID"] == 1:
                 if stat["Quest_MID"] == 0:
                     self.add_log("[クエスト]\nどのクエストに行きますか?",msg)
@@ -129,7 +129,7 @@ class Menu(M_Process):
             #選択肢に応じて処理―
             #メインメニュー
             if stat["MenuID"] == 0:
-                choice = self.choicer(msg.text,["クエスト","バイト","ショップ","設定"])
+                choice = self.choicer(msg.text,["クエスト","バイト","ショップ","設定","中断"])
                 if choice != None:
                     if choice == "クエスト":
                         stat["MenuID"] = 1
@@ -142,8 +142,12 @@ class Menu(M_Process):
                     elif choice == "設定":
                         stat["MenuID"] = 4
                         stat["Setting_ID"] = 0
-                    self.rpgdata[msg._from]["Stats"]["Menu"]["Selecting"] = False
-                    self.process_menu(msg)
+                    elif choice == "中断":
+                        msg.text = "中断"
+                        self.process_rpg(msg)
+                    if choice != "中断":
+                        self.rpgdata[msg._from]["Stats"]["Menu"]["Selecting"] = False
+                        self.process_menu(msg)
             #クエストメニュー
             elif stat["MenuID"] == 1:
                 choice = self.choicer(msg.text,self.quest_sel_dict[stat["Quest_MID"]])
@@ -156,14 +160,19 @@ class Menu(M_Process):
                             self.rpgdata[msg._from]["Stats"]["Menu"]["Selecting"] = False
                             self.process_menu(msg)
                     else:
-                            if choice != "戻る": self.rpgdata[msg._from]["Stats"]["Quest"]["Quest_Name"] = choice
-                            elif choice == "戻る": stat["Quest_MID"] = 0
                             self.rpgdata[msg._from]["Stats"]["Menu"]["Selecting"] = False
                             if choice != "戻る":
-                                self.rpgdata[msg._from]["Stats"]["Screen"] = "quest"
-                                self.rpgdata[msg._from]["Stats"]["Quest"]["Questing"] = True
-                                self.new_quest(msg)
+                                    #TODO: 固定値を変動値に。
+                                    if self.use_stamina(msg._from,5): 
+                                        self.rpgdata[msg._from]["Stats"]["Quest"]["Quest_Name"] = choice
+                                        self.rpgdata[msg._from]["Stats"]["Screen"] = "quest"
+                                        self.rpgdata[msg._from]["Stats"]["Quest"]["Questing"] = True
+                                        self.new_quest(msg)
+                                    else:
+                                        self.add_log("スタミナが不足しています",msg)
+                                        self.process_menu(msg)
                             else:
+                                stat["Quest_MID"] = 0
                                 self.process_menu(msg)
             #ワークメニュー
             elif stat["MenuID"] == 2:

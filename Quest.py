@@ -274,7 +274,7 @@ class Q_Process(object):
         self.rpgdata[msg._from]["Stats"]["Quest"]["Questing"] = False
         self.End_Quest("Goal",msg)
     
-    def level_calc(self,exp,msg):
+    def Quest_LevelUP(self,exp,msg):
         data = self.rpgdata[msg._from]
         data["EXP"] += exp
         old_lv = deepcopy(self.rpgdata[msg._from]["Level"])
@@ -311,7 +311,7 @@ class Q_Process(object):
             self.add_log(" 撤退",msg)
             self.add_log("[報酬]",msg)
             self.add_log("　なし",msg)
-        lvup = self.level_calc(gexp,msg)
+        lvup = self.Quest_LevelUP(gexp,msg)
         self.add_log("[経験値]",msg)
         self.add_log(" +%s"%(gexp),msg)
         self.send_log(msg)

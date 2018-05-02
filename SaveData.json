@@ -12,6 +12,7 @@
         "Skills":{},
         "Stats":{
             "Log":[],
+            "Stm_chk": "2018-05-02 00:00:00",
             "Screen":"menu",
             "Menu":{
                 "MenuID":0,

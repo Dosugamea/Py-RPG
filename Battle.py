@@ -285,6 +285,8 @@ class B_Process(object):
         e = self.new_entity(1,mid=msg._from)
         e["EType"] = 1
         b["Entities"]["p1"] = e
+        b["Entities"]["p1"]["HP"] = self.rpgdata[msg._from]["Stats"]["Quest"]["Player"]["HP"]
+        b["Entities"]["p1"]["MP"] = self.rpgdata[msg._from]["Stats"]["Quest"]["Player"]["MP"]
         b = self.sort_entities(b)
         for key in b["Entities"]:
             b["Entities"][key] = self.reset_entity_effect(b["Entities"][key])
@@ -526,8 +528,14 @@ class B_Process(object):
             self.rpgdata[msg._from]["Stats"]["Screen"] = "menu"
             self.bye_battle(msg)
     def bye_battle(self,msg):
-        self.rpgdata[msg._from]["Stats"]["Battle"]["Process_Turn"] = False
-        self.rpgdata[msg._from]["Stats"]["InBattle"] = False
+        stat = self.rpgdata[msg._from]["Stats"]
+        try:
+            stat["Quest"]["Player"]["HP"] = stat["Battle"]["Entities"]["p1"]["HP"]
+            stat["Quest"]["Player"]["MP"] = stat["Battle"]["Entities"]["p1"]["MP"]
+        except:
+            pass
+        stat["Battle"]["Process_Turn"] = False
+        stat["InBattle"] = False
         self.process_quest(msg)
 #戦闘処理
 class Battle(B_Entity,B_Process,B_Utility):

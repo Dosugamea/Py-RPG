@@ -7,7 +7,7 @@ class Message(object):
 class Client(object):
     def __init__(self):
         self.reqId = 0
-    def sendMessage(self,text):
+    def sendMessage(self,to,text):
         print("Req<%s>\n\n%s"%(self.reqId,text))
         self.reqId += 1
 class Logger(object):
@@ -15,7 +15,7 @@ class Logger(object):
         self.rpgdata[msg._from]["Stats"]["Log"].append(text)
     def send_log(self,msg):
         text = self.combine(self.rpgdata[msg._from]["Stats"]["Log"])
-        self.cl.sendMessage(text)
+        self.cl.sendMessage(msg.to,text)
         self.rpgdata[msg._from]["Stats"]["Log"] = []
 class Choicer(object):
     choice_dict = {
